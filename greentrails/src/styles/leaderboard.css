@@ -24,15 +24,17 @@
 }
 
 #events-table{
-    max-width: 30vw;
+    width: 100%;
     grid-template-areas: "title" "leaderboard";
     text-align: center;
-    margin: auto;
 }
 #events-title{
     grid-area: title;
+    margin: auto;
+    color: darkgreen;
 }
 #events-leaderboard{
+    margin: auto;
     grid-area: leaderboard;
 }
 .place{
