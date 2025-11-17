@@ -24,5 +24,10 @@ import Tree from './tree';
             </div>
         )
     }
+        export const Cloudfooter: React.FC = () => {
+        return (
+            <TreeFooter />
+        )
+    }
 
     export default TreeFooter;

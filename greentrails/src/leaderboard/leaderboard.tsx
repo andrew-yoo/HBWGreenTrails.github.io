@@ -6,6 +6,7 @@ import table from './table';
 import Table from './table';
 import Top from '../componets/header';
 import Meetingsboard from './meetingsboard';
+import {Cloudfooter} from '../componets/footer';
 
     const Leaderboard: React.FC = () => {
         return (
@@ -16,6 +17,7 @@ import Meetingsboard from './meetingsboard';
                 <Table />
                 <Meetingsboard />
                 </div>
+                <Cloudfooter />
             </div>
         )
     }

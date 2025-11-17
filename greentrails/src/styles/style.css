@@ -37,18 +37,18 @@ body{
   
 }
 #tree1{
-  height: 90%;
+  height: 91%;
   position: fixed;
   top: 50px;
-  left: 0%;
+  left: calc(0% - 100px);
   width: 300px;
   z-index: 0;
 }
 #tree2{
-  height: 90%;
+  height: 91%;
   position: fixed;
   top: 50px;
-  left: calc(100% - 300px);
+  left: calc(100% - 200px);
   width: 300px;
   z-index: 0;
 }
@@ -123,4 +123,8 @@ body{
   padding-bottom: 1rem;
   color: rgb(255, 255, 255);
   font-size: 20px;
+}
+
+.cloudfooter{
+
 }
