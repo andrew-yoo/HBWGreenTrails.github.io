@@ -18,7 +18,7 @@ import { Button } from 'react-bootstrap';
         return (
             <div id='page'>
                 <Navbar />
-                <Top message="Upcoming Volunteer Opportunities" />
+                <Top message="Upcoming Volunteer Opportunities" shadow={true} />
                 <button id='showpastbutton' onClick={showPast}>{past ? "Show past opportunities" : "Hide past opportunities"}</button>
                 {past ? <Volbox /> : <Volboxall />}
                 <Regfooter />

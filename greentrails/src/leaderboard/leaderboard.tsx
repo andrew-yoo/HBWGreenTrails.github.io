@@ -9,7 +9,7 @@ import Top from '../componets/header';
     const Leaderboard: React.FC = () => {
         return (
             <div>
-                <Top message="Leaderboard" />
+                <Top message="Leaderboard" shadow={true} />
                 <Navbar />
                 <Table />
             </div> 

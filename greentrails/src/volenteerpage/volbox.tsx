@@ -64,9 +64,12 @@ const Volbox: React.FC = () => {
           
           if (opportunities.length === 0) {
             return(
+              <>
             <div className="box">
              <h1>No upcoming volunteer opportunities available we will be adding more soon.</h1>
-            </div>);
+            </div>
+            <div className="trunk"></div>
+          </>);
           }
           
           function addName(event: React.MouseEvent<HTMLButtonElement>) {

@@ -8,7 +8,7 @@ import Signupgui from './signupgui';
     const Signup: React.FC = () => {
         return (
             <div>
-                <Top message="Sign Up!!" />
+                <Top message="Sign Up!!" shadow={true} />
                 <Navbar />
                 <Signupgui />
             </div> 

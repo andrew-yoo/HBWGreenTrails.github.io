@@ -6,10 +6,12 @@ import { HashRouter as Router, Route, Routes, Navigate } from 'react-router-dom'
 import Adddatapage from './adddata/adddatapage';
 import Leaderboard from './leaderboard/leaderboard';
 import Signup from './signup_page/signup';
+import Icon from './componets/icon'
 
 const App: React.FC = () => {
     return (
         <div className="App">
+            <Icon />
             <Router>
                 <Routes>
                     {/* Redirect any unknown path to homepage */}

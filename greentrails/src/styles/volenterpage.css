@@ -24,6 +24,7 @@
   top: 10%;
   width: 36vw;
   height: fit-content;
+  min-height: 40vh;
   left: calc(50% - 40vw/2);
   position: relative;
   /* margin-top: 15vh; */
