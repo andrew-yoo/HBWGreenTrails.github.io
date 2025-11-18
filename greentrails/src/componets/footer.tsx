@@ -1,16 +1,20 @@
 import '../styles/style.css'
 import React from 'react';
 import Tree from './tree';
+import FlowerCanvas from './flowers';
 
     const TreeFooter: React.FC = () => {
         return (
             <div>
                 <div id='tree1'><Tree /></div>
                 <div id='tree2'><Tree /></div>
-                <footer>
-                    <div id='road'></div>
-                </footer>
                 
+                <footer>
+                    <FlowerCanvas>
+                    <div id='road'></div>
+                     </FlowerCanvas>
+                </footer>
+               
             </div>
         )
     }

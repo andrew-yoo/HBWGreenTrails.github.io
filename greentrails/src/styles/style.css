@@ -37,7 +37,7 @@ body{
   
 }
 #tree1{
-  height: 91%;
+  height: 92%;
   position: fixed;
   top: 50px;
   left: calc(0% - 100px);
@@ -45,7 +45,7 @@ body{
   z-index: 0;
 }
 #tree2{
-  height: 91%;
+  height: 92%;
   position: fixed;
   top: 50px;
   left: calc(100% - 200px);
