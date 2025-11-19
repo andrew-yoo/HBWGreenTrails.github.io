@@ -303,15 +303,15 @@ export default function Snow({
         };
         window.addEventListener("resize", onResize);
 
-        // attach click to canvas
-        canvas.addEventListener("click", onClick);
+        // attach click to window instead of canvas to allow clicks through
+        window.addEventListener("click", onClick);
 
         return () => {
             if (rafRef.current) cancelAnimationFrame(rafRef.current);
             if (spawnIntervalRef.current) clearInterval(spawnIntervalRef.current);
             window.clearTimeout(firstSpawn);
             window.removeEventListener("resize", onResize);
-            canvas.removeEventListener("click", onClick);
+            window.removeEventListener("click", onClick);
         };
     }, [particleCount, speed, size, color]);
 
@@ -324,8 +324,8 @@ export default function Snow({
                 left: 0,
                 width: "100%",
                 height: "100%",
-                // changed to allow clicking santas; if this blocks other UI adjust accordingly
-                pointerEvents: "auto",
+                // set to none to allow clicks through to underlying elements
+                pointerEvents: "none",
                 zIndex,
             }}
             aria-hidden
