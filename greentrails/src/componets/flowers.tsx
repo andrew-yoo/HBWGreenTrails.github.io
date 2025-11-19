@@ -24,9 +24,9 @@ const colors = [
 
 export default function Flowers({
     children,
-    flowers = 100,
+    flowers = 0,
     grass = 200,
-    tileSize = 40,
+    tileSize = 0,
 }: FlowersProps) {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const wrapperRef = useRef<HTMLDivElement | null>(null);
@@ -62,7 +62,6 @@ export default function Flowers({
             const angle = Math.random() * Math.PI * 2;
             ctx.rotate(angle);
             ctx.fillStyle = color;
-            ctx.fillRect(-r / 2, -r / 2, r, r);
             ctx.restore();
         }
         function randomCubes(count: number) {

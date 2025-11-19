@@ -12,6 +12,7 @@ import {Cloudfooter} from '../componets/footer';
         return (
             <div >
                 <Top message="Leaderboards" shadow={true} />
+                
                 <Navbar />
                 <div style={{ display: 'flex' , flexDirection:'row'}}>
                 <Table />

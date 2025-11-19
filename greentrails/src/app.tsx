@@ -7,11 +7,13 @@ import Adddatapage from './adddata/adddatapage';
 import Leaderboard from './leaderboard/leaderboard';
 import Signup from './signup_page/signup';
 import Icon from './componets/icon'
+import Snow from './componets/snow';
 
 const App: React.FC = () => {
     return (
         <div className="App">
             <Icon />
+            <Snow />
             <Router>
                 <Routes>
                     {/* Redirect any unknown path to homepage */}
