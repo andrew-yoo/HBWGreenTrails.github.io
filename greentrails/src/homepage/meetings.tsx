@@ -45,7 +45,7 @@ export function MeetingsList({ nextMeetingDate }: { nextMeetingDate: Date }) {
                         month: 'long', 
                         day: 'numeric' 
                     })}{' '}
-                    in Hangs room (510) at lunch!
+                    in Hang's room (510) at lunch!
                 </p>
             ))}
         </div>
