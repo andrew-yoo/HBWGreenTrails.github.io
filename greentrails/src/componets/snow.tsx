@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import santaSVG from "./santa.tsx";
 
 type SnowProps = {
     particleCount?: number;
@@ -68,19 +69,6 @@ export default function Snow({
         if (!ctx) return;
 
         // small inline SVG Santa to avoid external assets
-        const santaSVG = encodeURIComponent(`
-            <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 64'>
-              <g>
-                <ellipse cx='40' cy='36' rx='22' ry='16' fill='#c0392b'/>
-                <rect x='16' y='24' width='48' height='8' rx='4' fill='#e74c3c'/>
-                <circle cx='88' cy='16' r='12' fill='#e74c3c'/>
-                <rect x='76' y='22' width='24' height='8' rx='4' fill='#fff'/>
-                <path d='M 20 20 Q 40 0 60 20' fill='#fff' />
-                <circle cx='96' cy='12' r='4' fill='#fff'/>
-                <path d='M8 44 Q64 80 120 44' fill='#000' opacity='0.15'/>
-              </g>
-            </svg>
-        `);
         const santaImg = new Image();
         santaImg.src = `data:image/svg+xml;charset=utf-8,${santaSVG}`;
         santaImageRef.current = santaImg;
