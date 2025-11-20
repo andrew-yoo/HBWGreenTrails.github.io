@@ -1,5 +1,8 @@
 import { useEffect, useRef } from "react";
 import santaSVG from "./santa.tsx";
+import { useAuth } from "../context/AuthContext";
+import { db } from "../base/firebaseConfig";
+import { doc, updateDoc, increment } from "firebase/firestore";
 
 type SnowProps = {
     particleCount?: number;
@@ -60,6 +63,9 @@ export default function Snow({
 
     // new: explosion particles
     const explosionsRef = useRef<ExpParticle[]>([]);
+    
+    // Get current user from auth context
+    const { currentUser } = useAuth();
 
     useEffect(() => {
         const canvas = canvasRef.current!;
@@ -270,6 +276,19 @@ export default function Snow({
                     // spawn explosion using santa's position and remove santa
                     spawnExplosion(s.x, s.y, "#ffb347"); // warm color
                     santas.splice(i, 1);
+                    
+                    // Increment santa count for logged-in user
+                    if (currentUser) {
+                        try {
+                            const userDocRef = doc(db, "Users", currentUser);
+                            updateDoc(userDocRef, {
+                                santasPopped: increment(1)
+                            });
+                        } catch (error) {
+                            console.error("Error updating santa count:", error);
+                        }
+                    }
+                    
                     break; // only explode one per click
                 }
             }
