@@ -283,10 +283,16 @@ export default function Snow({
                             const userDocRef = doc(db, "Users", currentUser);
                             updateDoc(userDocRef, {
                                 santasPopped: increment(1)
+                            }).then(() => {
+                                console.log(`Santa popped! Count incremented for ${currentUser}`);
+                            }).catch((error) => {
+                                console.error("Error updating santa count:", error);
                             });
                         } catch (error) {
-                            console.error("Error updating santa count:", error);
+                            console.error("Error creating update:", error);
                         }
+                    } else {
+                        console.log("No user logged in - santa pop not tracked");
                     }
                     
                     break; // only explode one per click

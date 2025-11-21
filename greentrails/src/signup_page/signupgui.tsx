@@ -69,6 +69,13 @@ import { useAuth } from '../context/AuthContext';
                 const userDoc = await getDoc(userDocRef);
                 
                 if (userDoc.exists()) {
+                    // Check if santasPopped field exists, if not initialize it
+                    const userData = userDoc.data();
+                    if (userData && userData.santasPopped === undefined) {
+                        await updateDoc(userDocRef, {
+                            santasPopped: 0
+                        });
+                    }
                     login(Name);
                     alert(`Welcome back, ${Name}!`);
                 } else {
