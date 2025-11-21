@@ -53,3 +53,18 @@
     margin: 0px;
     
 }
+
+#santa-table{
+    width: 100%;
+    grid-template-areas: "title" "leaderboard";
+    text-align: center;
+}
+#santa-title{
+    grid-area: title;
+    margin: auto;
+    color: darkgreen;
+}
+#santa-leaderboard{
+    margin: auto;
+    grid-area: leaderboard;
+}

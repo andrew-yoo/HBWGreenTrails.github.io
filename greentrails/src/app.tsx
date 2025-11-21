@@ -8,26 +8,29 @@ import Leaderboard from './leaderboard/leaderboard';
 import Signup from './signup_page/signup';
 import Icon from './componets/icon'
 import Snow from './componets/snow';
+import { AuthProvider } from './context/AuthContext';
 
 const App: React.FC = () => {
     return (
-        <div className="App">
-            <Icon />
-            <Snow />
-            <Router>
-                <Routes>
-                    {/* Redirect any unknown path to homepage */}
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                    {/* Main routes */}
-                    <Route path="/" element={<Homepage />} />
-                    <Route path="/greentrails/*" element={<Homepage />} />
-                    <Route path="/volenterpage/*" element={<Volenterpage />} />
-                    <Route path="/adddata/*" element={<Adddatapage />} />
-                    <Route path="/leaderboard/*" element={<Leaderboard />} />
-                    <Route path="/signup/*" element={<Signup />} /> 
-                </Routes>
-            </Router>
-        </div>
+        <AuthProvider>
+            <div className="App">
+                <Icon />
+                <Snow />
+                <Router>
+                    <Routes>
+                        {/* Redirect any unknown path to homepage */}
+                        <Route path="*" element={<Navigate to="/" replace />} />
+                        {/* Main routes */}
+                        <Route path="/" element={<Homepage />} />
+                        <Route path="/greentrails/*" element={<Homepage />} />
+                        <Route path="/volenterpage/*" element={<Volenterpage />} />
+                        <Route path="/adddata/*" element={<Adddatapage />} />
+                        <Route path="/leaderboard/*" element={<Leaderboard />} />
+                        <Route path="/signup/*" element={<Signup />} /> 
+                    </Routes>
+                </Router>
+            </div>
+        </AuthProvider>
     );
 };
 

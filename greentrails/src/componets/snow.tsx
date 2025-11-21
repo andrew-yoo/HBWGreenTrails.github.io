@@ -1,5 +1,8 @@
 import { useEffect, useRef } from "react";
 import santaSVG from "./santa.tsx";
+import { useAuth } from "../context/AuthContext";
+import { db } from "../base/firebaseConfig";
+import { doc, updateDoc, increment } from "firebase/firestore";
 
 type SnowProps = {
     particleCount?: number;
@@ -60,6 +63,18 @@ export default function Snow({
 
     // new: explosion particles
     const explosionsRef = useRef<ExpParticle[]>([]);
+    
+    // Get current user from auth context
+    const { currentUser } = useAuth();
+    
+    // Store currentUser in a ref so click handler always has latest value
+    const currentUserRef = useRef<string | null>(currentUser);
+    
+    // Update ref whenever currentUser changes
+    useEffect(() => {
+        currentUserRef.current = currentUser;
+        console.log('Snow: currentUser updated to:', currentUser);
+    }, [currentUser]);
 
     useEffect(() => {
         const canvas = canvasRef.current!;
@@ -260,6 +275,11 @@ export default function Snow({
             const x = (e.clientX - rect.left);
             const y = (e.clientY - rect.top);
             const santas = santaSpritesRef.current;
+            
+            // Use ref to get current user value (not closure)
+            const user = currentUserRef.current;
+            console.log('Santa click detected. Current user:', user);
+            
             // iterate in reverse to remove hit santa
             for (let i = santas.length - 1; i >= 0; i--) {
                 const s = santas[i];
@@ -270,6 +290,32 @@ export default function Snow({
                     // spawn explosion using santa's position and remove santa
                     spawnExplosion(s.x, s.y, "#ffb347"); // warm color
                     santas.splice(i, 1);
+                    
+                    // Increment santa count for logged-in user
+                    if (user) {
+                        console.log('User is logged in, incrementing santa count for:', user);
+                        try {
+                            const userDocRef = doc(db, "Users", user);
+                            updateDoc(userDocRef, {
+                                santasPopped: increment(1)
+                            }).then(() => {
+                                console.log(`Santa popped! Count incremented for ${user}`);
+                            }).catch((error) => {
+                                console.error("Error updating santa count:", error);
+                                alert(`Failed to save Santa pop. Error: ${error.message}`);
+                            });
+                        } catch (error) {
+                            console.error("Error creating update:", error);
+                        }
+                    } else {
+                        console.log("No user logged in - santa pop not tracked");
+                        // Show a one-time alert to inform user they need to login
+                        if (!sessionStorage.getItem('loginReminderShown')) {
+                            alert('🎅 Login required! Go to the Sign Up page to login or create an account, then your Santa pops will be tracked on the leaderboard!');
+                            sessionStorage.setItem('loginReminderShown', 'true');
+                        }
+                    }
+                    
                     break; // only explode one per click
                 }
             }
