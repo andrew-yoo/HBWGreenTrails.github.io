@@ -143,8 +143,13 @@ const Volbox: React.FC = () => {
             <p></p>
             {currentUser ? (
               <>
-                <button type="submit" id={opportunity.id} className="button nameinput" onClick={(e) => addName(e)}> 
-                  Sign Up
+                <button 
+                  type="submit" 
+                  id={opportunity.id} 
+                  className="volunteer-signup-btn" 
+                  onClick={(e) => addName(e)}
+                > 
+                  🌲 Sign Up for This Event
                 </button>
               </>
             ) : (

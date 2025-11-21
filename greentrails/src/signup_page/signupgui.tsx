@@ -90,42 +90,34 @@ import { useAuth } from '../context/AuthContext';
         return (
             <div>
                 {currentUser ? (
-                    <div className="signup">
-                        <h3>Welcome, {currentUser}!</h3>
+                    <div className="signup signup-welcome">
+                        <h3>🌲 Welcome, {currentUser}! 🌲</h3>
                         <p>You are currently logged in.</p>
-                        <p style={{ fontSize: '14px', color: '#2d5a3d', marginTop: '10px' }}>
+                        <p style={{ fontSize: '16px', marginTop: '20px' }}>
                             🎅 <strong>Santa Tracking Active!</strong> Click flying Santas anywhere on the site to earn points and climb the leaderboard!
                         </p>
                         <button onClick={() => logout()}>Logout</button>
                     </div>
                 ) : (
                     <div className="signup">
-                        <h3>{isLoginMode ? 'Login' : 'Sign Up'}</h3>
-                        <p style={{ fontSize: '14px', color: '#2d5a3d', marginBottom: '15px' }}>
+                        <h3>{isLoginMode ? '🔐 Login' : '✨ Sign Up'}</h3>
+                        <p style={{ fontSize: '16px', color: '#2d5a3d', marginBottom: '20px' }}>
                             🎅 Track your Santa pops and compete on the leaderboard!
                         </p>
-                        <input id="name" type="text" placeholder='please enter your name' />
+                        <input id="name" type="text" placeholder='Enter your name' />
                         {isLoginMode ? (
                             <button type="submit" onClick={e => loginUser(e)}>Login</button>
                         ) : (
                             <button type="submit" onClick={e => adduser(e)}>Sign Up</button>
                         )}
-                        <p style={{ marginTop: '10px' }}>
-                            {isLoginMode ? "Don't have an account?" : "Already have an account?"}
-                            <button 
-                                onClick={() => setIsLoginMode(!isLoginMode)}
-                                style={{ 
-                                    marginLeft: '5px', 
-                                    background: 'none', 
-                                    border: 'none', 
-                                    color: '#4CAF50', 
-                                    cursor: 'pointer',
-                                    textDecoration: 'underline'
-                                }}
-                            >
-                                {isLoginMode ? 'Sign Up' : 'Login'}
+                        <div className="signup-toggle">
+                            <p style={{ marginBottom: '10px', color: '#666' }}>
+                                {isLoginMode ? "Don't have an account?" : "Already have an account?"}
+                            </p>
+                            <button onClick={() => setIsLoginMode(!isLoginMode)}>
+                                {isLoginMode ? 'Create New Account' : 'Login Instead'}
                             </button>
-                        </p>
+                        </div>
                     </div>
                 )}
             </div> 

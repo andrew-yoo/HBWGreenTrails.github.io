@@ -44,6 +44,33 @@
   margin: 1px;
 }
 
+.volunteer-signup-btn {
+  background: linear-gradient(135deg, #4CAF50 0%, #2d7a32 100%);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+  transition: all 0.3s ease;
+  margin: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.volunteer-signup-btn:hover {
+  background: linear-gradient(135deg, #45a049 0%, #266928 100%);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.6);
+  transform: translateY(-2px);
+}
+
+.volunteer-signup-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(76, 175, 80, 0.4);
+}
+
 .addmoredata{
   background-color: rgb(26, 43, 28);
   border: 0cap;
