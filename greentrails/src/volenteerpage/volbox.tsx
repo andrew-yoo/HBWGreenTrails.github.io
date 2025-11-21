@@ -100,11 +100,13 @@ const Volbox: React.FC = () => {
             const opportunity = opportunities.find((opportunity) => opportunity.id === target.id);
             if(opportunity && new Date(opportunity.date) < new Date()){
               console.log("Event has already passed");
+              alert("This event has already passed and is no longer accepting sign-ups.");
               return;
             }
 
             if (!Users.some(user => user.Name === userName)){
               console.log("User not found in the list");
+              alert("Your account was not found. Please try logging out and logging back in.");
               return;
             }
             try{
@@ -112,8 +114,10 @@ const Volbox: React.FC = () => {
                 signups: arrayUnion(userName),
             });
             document.getElementById(target.id+'d')!.textContent = "So far " + opportunities.find((opportunity) => opportunity.id === target.id)!.signups.join(", ") + ", " + userName + " will be going";
+            alert("Successfully signed up for this opportunity!");
             } catch (error) {
               console.error("Error adding name to opportunity:", error);
+              alert("An error occurred while signing up. Please try again.");
             }
           };
 
