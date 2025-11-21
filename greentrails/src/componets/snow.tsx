@@ -266,6 +266,9 @@ export default function Snow({
             const x = (e.clientX - rect.left);
             const y = (e.clientY - rect.top);
             const santas = santaSpritesRef.current;
+            
+            console.log('Santa click detected. Current user:', currentUser);
+            
             // iterate in reverse to remove hit santa
             for (let i = santas.length - 1; i >= 0; i--) {
                 const s = santas[i];
@@ -279,6 +282,7 @@ export default function Snow({
                     
                     // Increment santa count for logged-in user
                     if (currentUser) {
+                        console.log('User is logged in, incrementing santa count for:', currentUser);
                         try {
                             const userDocRef = doc(db, "Users", currentUser);
                             updateDoc(userDocRef, {
