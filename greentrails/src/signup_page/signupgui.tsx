@@ -93,11 +93,17 @@ import { useAuth } from '../context/AuthContext';
                     <div className="signup">
                         <h3>Welcome, {currentUser}!</h3>
                         <p>You are currently logged in.</p>
+                        <p style={{ fontSize: '14px', color: '#2d5a3d', marginTop: '10px' }}>
+                            🎅 <strong>Santa Tracking Active!</strong> Click flying Santas anywhere on the site to earn points and climb the leaderboard!
+                        </p>
                         <button onClick={() => logout()}>Logout</button>
                     </div>
                 ) : (
                     <div className="signup">
                         <h3>{isLoginMode ? 'Login' : 'Sign Up'}</h3>
+                        <p style={{ fontSize: '14px', color: '#2d5a3d', marginBottom: '15px' }}>
+                            🎅 Track your Santa pops and compete on the leaderboard!
+                        </p>
                         <input id="name" type="text" placeholder='please enter your name' />
                         {isLoginMode ? (
                             <button type="submit" onClick={e => loginUser(e)}>Login</button>

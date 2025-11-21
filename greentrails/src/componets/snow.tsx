@@ -291,12 +291,18 @@ export default function Snow({
                                 console.log(`Santa popped! Count incremented for ${currentUser}`);
                             }).catch((error) => {
                                 console.error("Error updating santa count:", error);
+                                alert(`Failed to save Santa pop. Error: ${error.message}`);
                             });
                         } catch (error) {
                             console.error("Error creating update:", error);
                         }
                     } else {
                         console.log("No user logged in - santa pop not tracked");
+                        // Show a one-time alert to inform user they need to login
+                        if (!sessionStorage.getItem('loginReminderShown')) {
+                            alert('🎅 Login required! Go to the Sign Up page to login or create an account, then your Santa pops will be tracked on the leaderboard!');
+                            sessionStorage.setItem('loginReminderShown', 'true');
+                        }
                     }
                     
                     break; // only explode one per click
