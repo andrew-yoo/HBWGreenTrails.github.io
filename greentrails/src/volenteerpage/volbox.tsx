@@ -6,6 +6,7 @@ import { collection, getDocs, updateDoc, doc, arrayUnion } from "firebase/firest
 import { useNavigate } from "react-router-dom";
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { useAuth } from "../context/AuthContext";
 
 
 export interface Opportunity {
@@ -24,6 +25,7 @@ const Volbox: React.FC = () => {
     const [loading, setLoading] = useState(true); 
     const navigate = useNavigate();
     const [Users, setUsers] = React.useState<any[]>([]);
+    const { currentUser } = useAuth();
 
     useEffect(() => {
         const fetchOpportunities = async () => {
@@ -133,7 +135,7 @@ const Volbox: React.FC = () => {
             <label>Sign up here with green trails:</label>
             <p></p>
             {/* <input className="nameinput" type="text" placeholder="Enter name here" id={opportunity.id + "i"}/> */}
-            <input className="nameinput" list={`dropdown-${opportunity.id}`} id={opportunity.id + "i"} name="options" />
+            <input className="nameinput" list={`dropdown-${opportunity.id}`} id={opportunity.id + "i"} name="options" defaultValue={currentUser || ""} />
               <datalist id={`dropdown-${opportunity.id}`}>
                 {Users.map((user) => (
                   <option key={user.id} value={user.Name}>{user.Name}</option>
