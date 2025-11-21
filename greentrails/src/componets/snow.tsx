@@ -66,6 +66,15 @@ export default function Snow({
     
     // Get current user from auth context
     const { currentUser } = useAuth();
+    
+    // Store currentUser in a ref so click handler always has latest value
+    const currentUserRef = useRef<string | null>(currentUser);
+    
+    // Update ref whenever currentUser changes
+    useEffect(() => {
+        currentUserRef.current = currentUser;
+        console.log('Snow: currentUser updated to:', currentUser);
+    }, [currentUser]);
 
     useEffect(() => {
         const canvas = canvasRef.current!;
@@ -267,7 +276,9 @@ export default function Snow({
             const y = (e.clientY - rect.top);
             const santas = santaSpritesRef.current;
             
-            console.log('Santa click detected. Current user:', currentUser);
+            // Use ref to get current user value (not closure)
+            const user = currentUserRef.current;
+            console.log('Santa click detected. Current user:', user);
             
             // iterate in reverse to remove hit santa
             for (let i = santas.length - 1; i >= 0; i--) {
@@ -281,14 +292,14 @@ export default function Snow({
                     santas.splice(i, 1);
                     
                     // Increment santa count for logged-in user
-                    if (currentUser) {
-                        console.log('User is logged in, incrementing santa count for:', currentUser);
+                    if (user) {
+                        console.log('User is logged in, incrementing santa count for:', user);
                         try {
-                            const userDocRef = doc(db, "Users", currentUser);
+                            const userDocRef = doc(db, "Users", user);
                             updateDoc(userDocRef, {
                                 santasPopped: increment(1)
                             }).then(() => {
-                                console.log(`Santa popped! Count incremented for ${currentUser}`);
+                                console.log(`Santa popped! Count incremented for ${user}`);
                             }).catch((error) => {
                                 console.error("Error updating santa count:", error);
                                 alert(`Failed to save Santa pop. Error: ${error.message}`);
