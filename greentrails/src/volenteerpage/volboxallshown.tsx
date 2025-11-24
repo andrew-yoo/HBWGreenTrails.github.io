@@ -6,6 +6,7 @@ import { collection, getDocs, updateDoc, doc, arrayUnion } from "firebase/firest
 import { useNavigate } from "react-router-dom";
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { useAuth } from "../context/AuthContext";
 
 
 export interface Opportunity {
@@ -24,6 +25,7 @@ const Volbox: React.FC = () => {
     const [loading, setLoading] = useState(true); 
     const navigate = useNavigate();
     const [Users, setUsers] = React.useState<any[]>([]);
+    const { currentUser } = useAuth();
 
     useEffect(() => {
         const fetchOpportunities = async () => {
@@ -72,13 +74,22 @@ const Volbox: React.FC = () => {
           function addName(event: React.MouseEvent<HTMLButtonElement>) {
             let target = event.currentTarget as HTMLButtonElement;
             const curdoc = doc(db, "opportunities", target.id);
-            const name = document.getElementById(target.id+'i') as HTMLInputElement;
+            
+            // Use currentUser if logged in, otherwise check for input field
+            let userName = currentUser;
+            if (!userName) {
+              const name = document.getElementById(target.id+'i') as HTMLInputElement;
+              if(name && name.value){
+                userName = name.value;
+              }
+            }
+            
             console.log(Users);
-            if(name === null || name.value === ""){
+            if(!userName || userName === ""){
               return;
             }
             
-            if (name.value === "editcode0"){
+            if (userName === "editcode0"){
               console.log("edit code entered");
               navigate('/adddata');
               return;
@@ -86,25 +97,24 @@ const Volbox: React.FC = () => {
             const opportunity = opportunities.find((opportunity) => opportunity.id === target.id);
             if(opportunity && new Date(opportunity.date) < new Date()){
               console.log("Event has already passed");
-              name.value = "";
-              name.placeholder = "Event has already passed";
+              alert("This event has already passed and is no longer accepting sign-ups.");
               return;
             }
 
-            if (!Users.some(user => user.Name === name.value)){
+            if (!Users.some(user => user.Name === userName)){
               console.log("User not found in the list");
-              name.value = "";
-              name.placeholder = "Please use signup";
+              alert("Your account was not found. Please try logging out and logging back in.");
               return;
             }
-            console.log(document.getElementById(target.id+'i'));
             try{
               updateDoc(curdoc, {
-                signups: arrayUnion(name.value),
+                signups: arrayUnion(userName),
             });
-            document.getElementById(target.id+'d')!.textContent = "So far " + opportunities.find((opportunity) => opportunity.id === target.id)!.signups.join(", ") + ", " + name.value + " will be going";
+            document.getElementById(target.id+'d')!.textContent = "So far " + opportunities.find((opportunity) => opportunity.id === target.id)!.signups.join(", ") + ", " + userName + " will be going";
+            alert("Successfully signed up for this opportunity!");
             } catch (error) {
               console.error("Error adding name to opportunity:", error);
+              alert("An error occurred while signing up. Please try again.");
             }
           };
 
@@ -131,16 +141,22 @@ const Volbox: React.FC = () => {
         <div>
             <label>Sign up here with green trails:</label>
             <p></p>
-            {/* <input className="nameinput" type="text" placeholder="Enter name here" id={opportunity.id + "i"}/> */}
-            <input className="nameinput" list={`dropdown-${opportunity.id}`} id={opportunity.id + "i"} name="options" />
-              <datalist id={`dropdown-${opportunity.id}`}>
-                {Users.map((user) => (
-                  <option key={user.id} value={user.Name}>{user.Name}</option>
-                ))}
-              </datalist>
-            <button  type="submit" id={opportunity.id} className="button nameinput" onClick={(e) => addName(e)}> 
-              Add Name
-            </button>
+            {currentUser ? (
+              <>
+                <button 
+                  type="submit" 
+                  id={opportunity.id} 
+                  className="volunteer-signup-btn" 
+                  onClick={(e) => addName(e)}
+                > 
+                  🌲 Sign Up for This Event
+                </button>
+              </>
+            ) : (
+              <p style={{ color: '#d32f2f', fontWeight: 'bold' }}>
+                Please <a href="#/signup/" style={{ color: '#4CAF50', textDecoration: 'underline' }}>sign up or login</a> to register for this opportunity.
+              </p>
+            )}
             <p id={opportunity.id + "d"}>So far {opportunity.signups.join(", ")} will be going</p>
           </div>
       </div>
