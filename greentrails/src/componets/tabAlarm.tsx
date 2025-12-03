@@ -14,6 +14,10 @@ const PULSE_FADE_DURATION = 0.25;
 const PULSE_CYCLE_DURATION = 0.5;
 const PULSE_INTERVAL_MS = 500;
 
+// Voice message settings
+const VOICE_MESSAGE = "Go back to Green Trails";
+const VOICE_REPEAT_INTERVAL_MS = 3000;
+
 // Type for webkit AudioContext (Safari compatibility)
 type WebkitWindow = Window & { webkitAudioContext?: typeof AudioContext };
 
@@ -22,6 +26,24 @@ const TabAlarm: React.FC = () => {
     const oscillatorRef = useRef<OscillatorNode | null>(null);
     const gainNodeRef = useRef<GainNode | null>(null);
     const isPlayingRef = useRef<boolean>(false);
+    const voiceIntervalRef = useRef<number | null>(null);
+
+    const speakMessage = () => {
+        if (!isPlayingRef.current) return;
+        
+        try {
+            if ('speechSynthesis' in window) {
+                // Cancel any pending speech before starting new one to avoid overlap
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(VOICE_MESSAGE);
+                utterance.rate = 1.0;
+                utterance.volume = 1.0;
+                window.speechSynthesis.speak(utterance);
+            }
+        } catch (error) {
+            console.error('Failed to speak message:', error);
+        }
+    };
 
     const startAlarm = () => {
         if (!TAB_ALARM_ENABLED || isPlayingRef.current) return;
@@ -71,6 +93,10 @@ const TabAlarm: React.FC = () => {
                 }
             };
             pulse();
+            
+            // Start voice message - speak immediately and repeat at intervals
+            speakMessage();
+            voiceIntervalRef.current = window.setInterval(speakMessage, VOICE_REPEAT_INTERVAL_MS);
         } catch (error) {
             console.error('Failed to start alarm:', error);
         }
@@ -89,6 +115,14 @@ const TabAlarm: React.FC = () => {
         if (gainNodeRef.current) {
             gainNodeRef.current.disconnect();
             gainNodeRef.current = null;
+        }
+        // Stop voice message
+        if (voiceIntervalRef.current) {
+            clearInterval(voiceIntervalRef.current);
+            voiceIntervalRef.current = null;
+        }
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
         }
         isPlayingRef.current = false;
     };
