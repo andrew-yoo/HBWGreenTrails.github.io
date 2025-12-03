@@ -21,7 +21,7 @@ const Homepage: React.FC = () => {
                     <div className='nextmeeting'>
                         <h2>Upcoming Meetings:</h2>
 
-                        <MeetingsList nextMeetingDate={new Date('2025-11-13T12:35:00')} />
+                        <MeetingsList nextMeetingDate={new Date('2025-12-04T12:35:00')} />
                         
                     </div>
                     </div>
