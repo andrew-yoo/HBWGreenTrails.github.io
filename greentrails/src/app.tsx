@@ -8,6 +8,7 @@ import Leaderboard from './leaderboard/leaderboard';
 import Signup from './signup_page/signup';
 import Icon from './componets/icon'
 import Snow from './componets/snow';
+import TabAlarm from './componets/tabAlarm';
 import { AuthProvider } from './context/AuthContext';
 
 const App: React.FC = () => {
@@ -16,6 +17,7 @@ const App: React.FC = () => {
             <div className="App">
                 <Icon />
                 <Snow />
+                <TabAlarm />
                 <Router>
                     <Routes>
                         {/* Redirect any unknown path to homepage */}
