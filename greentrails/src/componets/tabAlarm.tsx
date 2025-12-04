@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 // TAB ALARM CONFIGURATION
 // Set this to false to disable the tab alarm
 // ============================================
-const TAB_ALARM_ENABLED = true;
+const TAB_ALARM_ENABLED = false;
 // ============================================
 
 // Alarm sound settings
