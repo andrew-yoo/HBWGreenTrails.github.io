@@ -75,7 +75,7 @@ const SantaUpgrades: React.FC = () => {
 
         const cost = autoClickerCosts[level];
         if (upgrades.coins < cost) {
-            alert(\`Not enough coins! You need \${cost} coins but only have \${upgrades.coins}.\`);
+            alert(`Not enough coins! You need ${cost} coins but only have ${upgrades.coins}.`);
             return;
         }
 
@@ -93,7 +93,7 @@ const SantaUpgrades: React.FC = () => {
                 autoClickerLevel: upgrades.autoClickerLevel + 1
             });
             
-            alert(\`Auto-clicker upgraded to level \${level + 1}!\`);
+            alert(`Auto-clicker upgraded to level ${level + 1}!`);
         } catch (error) {
             console.error("Error purchasing upgrade:", error);
             alert("Failed to purchase upgrade. Please try again.");
@@ -114,7 +114,7 @@ const SantaUpgrades: React.FC = () => {
 
         const cost = spawnSpeedCosts[level];
         if (upgrades.coins < cost) {
-            alert(\`Not enough coins! You need \${cost} coins but only have \${upgrades.coins}.\`);
+            alert(`Not enough coins! You need ${cost} coins but only have ${upgrades.coins}.`);
             return;
         }
 
@@ -132,7 +132,7 @@ const SantaUpgrades: React.FC = () => {
                 spawnSpeedLevel: upgrades.spawnSpeedLevel + 1
             });
             
-            alert(\`Spawn speed upgraded to level \${level + 1}!\`);
+            alert(`Spawn speed upgraded to level ${level + 1}!`);
         } catch (error) {
             console.error("Error purchasing upgrade:", error);
             alert("Failed to purchase upgrade. Please try again.");
@@ -164,7 +164,7 @@ const SantaUpgrades: React.FC = () => {
                 coins: upgrades.coins + coinsToAdd
             });
             
-            alert(\`Converted \${coinsToAdd} santa pops to \${coinsToAdd} coins!\`);
+            alert(`Converted ${coinsToAdd} santa pops to ${coinsToAdd} coins!`);
         } catch (error) {
             console.error("Error converting santas:", error);
             alert("Failed to convert. Please try again.");
