@@ -10,13 +10,16 @@ import { useAuth } from '../context/AuthContext';
     }
 
     const Navbar: React.FC<NavbarProps> = ({ bgcolor = 'rgb(94, 136, 94, 0)', boxShadow = false }) => {
-        const { currentUser } = useAuth();
+        const { currentUser, isAdmin } = useAuth();
         
         return (
             <div id='navbar' style={{ backgroundColor: bgcolor, boxShadow: boxShadow ? '0 4px 8px -2px #222' : 'none' }}>
                 <div className='link' id='homepage'><Link className="a" to="/HBWGreentrails/">Home</Link></div>
                 <div className='link' id='volunteer'><Link className="a" to="/volenterpage/">Volunteer!!</Link></div>
                 <div className='link' id='leaderboard'><Link className="a" to="/leaderboard/">Leaderboards</Link></div>
+                {isAdmin && (
+                    <div className='link' id='adddata'><Link className="a" to="/adddata/">Add Event</Link></div>
+                )}
                 <div className='link' id='Signup'>
                     <Link className="a" to="/signup/">
                         {currentUser ? `👤 ${currentUser}` : 'Sign up'}
