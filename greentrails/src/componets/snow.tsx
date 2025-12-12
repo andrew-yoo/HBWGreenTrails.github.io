@@ -52,6 +52,15 @@ export default function Snow({
     color = "#FFF",
     zIndex = 9999,
 }: SnowProps) {
+    // Constants for auto-clicker and spawn speed calculations
+    const BASE_AUTO_CLICK_INTERVAL = 10000; // 10 seconds
+    const AUTO_CLICK_LEVEL_REDUCTION = 2000; // 2 seconds per level
+    const MIN_AUTO_CLICK_INTERVAL = 2000; // 2 seconds minimum
+    
+    const BASE_SPAWN_INTERVAL = 5000; // 5 seconds
+    const SPAWN_SPEED_REDUCTION_FACTOR = 0.8; // 20% reduction per level
+    const MIN_SPAWN_INTERVAL = 1000; // 1 second minimum
+    
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const rafRef = useRef<number | null>(null);
     const particlesRef = useRef<Particle[]>([]);
@@ -371,8 +380,7 @@ export default function Snow({
         // Calculate spawn interval based on spawn speed level
         // Base: 5000ms, each level reduces by 20% (multiply by 0.8)
         const spawnSpeed = spawnSpeedLevelRef.current;
-        const baseInterval = 5000;
-        const spawnInterval = Math.max(1000, baseInterval * Math.pow(0.8, spawnSpeed));
+        const spawnInterval = Math.max(MIN_SPAWN_INTERVAL, BASE_SPAWN_INTERVAL * Math.pow(SPAWN_SPEED_REDUCTION_FACTOR, spawnSpeed));
         console.log('Santa spawn interval:', spawnInterval, 'ms (level', spawnSpeed, ')');
 
         // spawn first santa after 1s, then at calculated interval
@@ -383,7 +391,7 @@ export default function Snow({
         // Only start if auto-clicker level > 0
         // Interval: 10s, 8s, 6s, 4s, 2s for levels 1-5
         if (autoClickerLevelRef.current > 0) {
-            const autoClickInterval = Math.max(2000, 10000 - autoClickerLevelRef.current * 2000);
+            const autoClickInterval = Math.max(MIN_AUTO_CLICK_INTERVAL, BASE_AUTO_CLICK_INTERVAL - autoClickerLevelRef.current * AUTO_CLICK_LEVEL_REDUCTION);
             console.log('Auto-clicker active! Interval:', autoClickInterval, 'ms (level', autoClickerLevelRef.current, ')');
             
             autoClickerIntervalRef.current = window.setInterval(() => {

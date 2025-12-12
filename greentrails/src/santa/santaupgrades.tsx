@@ -284,7 +284,7 @@ const SantaUpgrades: React.FC = () => {
                             Automatically clicks santas for you every few seconds!
                             {upgrades.autoClickerLevel > 0 && (
                                 <span style={{ display: 'block', marginTop: '5px', color: '#4CAF50' }}>
-                                    ✓ Active: Clicking every {Math.max(10 - upgrades.autoClickerLevel * 2, 2)}s
+                                    ✓ Active: Clicking every {Math.max(2, 10 - upgrades.autoClickerLevel * 2)}s
                                 </span>
                             )}
                         </p>

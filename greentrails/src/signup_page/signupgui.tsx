@@ -16,6 +16,8 @@ import { useAuth } from '../context/AuthContext';
         const [opportunities, setOpportunities] = React.useState<any[]>([]);
         const [isLoginMode, setIsLoginMode] = React.useState(false);
         const [allUserNames, setAllUserNames] = React.useState<string[]>([]);
+        const [nameInput, setNameInput] = React.useState('');
+        const [selectedUser, setSelectedUser] = React.useState('');
         const { currentUser, login, logout } = useAuth();
         const navigate = useNavigate();
     
@@ -34,8 +36,13 @@ import { useAuth } from '../context/AuthContext';
         }, []);
 
         function adduser(event: React.MouseEvent<HTMLButtonElement>) {
+            const Name = nameInput.trim();
             
-            const Name = (document.getElementById('name') as HTMLInputElement).value;
+            if (Name === "") {
+                alert("Name cannot be empty. Please enter a valid name.");
+                return;
+            }
+            
             console.log(Name);
                     const checkIdExists = async (id: string) => {
                         const querySnapshot = await getDocs(collection(db, "Users"));
@@ -54,37 +61,34 @@ import { useAuth } from '../context/AuthContext';
                             alert("name already in use. Please choose a different name.");
                             return;
                         } else {
-                            if (Name.trim() !== "") {
-                                // Store name as-is but check will be case-insensitive
-                                const newDocRef = doc(collection(db, "Users"), Name);
-                                setDoc(newDocRef, { 
-                                    Name, 
-                                    score: 0, 
-                                    santasPopped: 0, 
-                                    isAdmin: false,
-                                    coins: 0,
-                                    autoClickerLevel: 0,
-                                    spawnSpeedLevel: 0
-                                }).then(() => {
-                                    alert("User created successfully! You are now logged in.");
-                                    login(Name, false);
-                                    // Refresh the username list
-                                    setAllUserNames([...allUserNames, Name].sort());
-                                });
-                            } else {
-                                alert("Name cannot be empty. Please enter a valid name.");
-                            }
+                            // Store name as-is but check will be case-insensitive
+                            const newDocRef = doc(collection(db, "Users"), Name);
+                            setDoc(newDocRef, { 
+                                Name, 
+                                score: 0, 
+                                santasPopped: 0, 
+                                isAdmin: false,
+                                coins: 0,
+                                autoClickerLevel: 0,
+                                spawnSpeedLevel: 0
+                            }).then(() => {
+                                alert("User created successfully! You are now logged in.");
+                                login(Name, false);
+                                // Refresh the username list
+                                setAllUserNames([...allUserNames, Name].sort());
+                                setNameInput('');
+                            });
                         }
                     });
             
         }
 
         async function loginUser(event: React.MouseEvent<HTMLButtonElement>) {
-            // Try to get from select dropdown first, then fallback to input
-            const selectElement = document.getElementById('userSelect') as HTMLSelectElement;
-            let Name = selectElement?.value || (document.getElementById('name') as HTMLInputElement).value;
+            // Use selected user from dropdown or typed name
+            let Name = selectedUser || nameInput;
+            Name = Name.trim();
             
-            if (Name.trim() === "") {
+            if (Name === "") {
                 alert("Name cannot be empty. Please select or enter a valid name.");
                 return;
             }
@@ -171,7 +175,9 @@ import { useAuth } from '../context/AuthContext';
                                     Select your name:
                                 </label>
                                 <select 
-                                    id="userSelect" 
+                                    id="userSelect"
+                                    value={selectedUser}
+                                    onChange={(e) => setSelectedUser(e.target.value)}
                                     style={{ 
                                         width: '100%', 
                                         padding: '10px', 
@@ -188,7 +194,13 @@ import { useAuth } from '../context/AuthContext';
                                 </select>
                             </div>
                         ) : (
-                            <input id="name" type="text" placeholder='Enter your name' />
+                            <input 
+                                id="name" 
+                                type="text" 
+                                placeholder='Enter your name'
+                                value={nameInput}
+                                onChange={(e) => setNameInput(e.target.value)}
+                            />
                         )}
                         {isLoginMode ? (
                             <button type="submit" onClick={e => loginUser(e)}>Login</button>
@@ -199,7 +211,11 @@ import { useAuth } from '../context/AuthContext';
                             <p style={{ marginBottom: '10px', color: '#666' }}>
                                 {isLoginMode ? "Don't have an account?" : "Already have an account?"}
                             </p>
-                            <button onClick={() => setIsLoginMode(!isLoginMode)}>
+                            <button onClick={() => {
+                                setIsLoginMode(!isLoginMode);
+                                setNameInput('');
+                                setSelectedUser('');
+                            }}>
                                 {isLoginMode ? 'Create New Account' : 'Login Instead'}
                             </button>
                         </div>
