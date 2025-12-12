@@ -15,11 +15,22 @@ import { useAuth } from '../context/AuthContext';
         const [leaderboardData, setLeaderboardData] = React.useState<any[]>([]);
         const [opportunities, setOpportunities] = React.useState<any[]>([]);
         const [isLoginMode, setIsLoginMode] = React.useState(false);
+        const [allUserNames, setAllUserNames] = React.useState<string[]>([]);
         const { currentUser, login, logout } = useAuth();
         const navigate = useNavigate();
     
         useEffect(() => {
-            
+            // Fetch all usernames for the dropdown
+            const fetchUserNames = async () => {
+                try {
+                    const querySnapshot = await getDocs(collection(db, "Users"));
+                    const names = querySnapshot.docs.map((doc) => doc.id);
+                    setAllUserNames(names.sort());
+                } catch (error) {
+                    console.error("Error fetching usernames:", error);
+                }
+            };
+            fetchUserNames();
         }, []);
 
         function adduser(event: React.MouseEvent<HTMLButtonElement>) {
@@ -30,7 +41,8 @@ import { useAuth } from '../context/AuthContext';
                         const querySnapshot = await getDocs(collection(db, "Users"));
                         let idExists = false;
                         querySnapshot.forEach((doc) => {
-                            if (doc.id === id) {
+                            // Case-insensitive comparison
+                            if (doc.id.toLowerCase() === id.toLowerCase()) {
                                 idExists = true;
                             }
                         });
@@ -43,10 +55,21 @@ import { useAuth } from '../context/AuthContext';
                             return;
                         } else {
                             if (Name.trim() !== "") {
+                                // Store name as-is but check will be case-insensitive
                                 const newDocRef = doc(collection(db, "Users"), Name);
-                                setDoc(newDocRef, { Name , score: 0, santasPopped: 0, isAdmin: false }).then(() => {
+                                setDoc(newDocRef, { 
+                                    Name, 
+                                    score: 0, 
+                                    santasPopped: 0, 
+                                    isAdmin: false,
+                                    coins: 0,
+                                    autoClickerLevel: 0,
+                                    spawnSpeedLevel: 0
+                                }).then(() => {
                                     alert("User created successfully! You are now logged in.");
                                     login(Name, false);
+                                    // Refresh the username list
+                                    setAllUserNames([...allUserNames, Name].sort());
                                 });
                             } else {
                                 alert("Name cannot be empty. Please enter a valid name.");
@@ -57,27 +80,56 @@ import { useAuth } from '../context/AuthContext';
         }
 
         async function loginUser(event: React.MouseEvent<HTMLButtonElement>) {
-            const Name = (document.getElementById('name') as HTMLInputElement).value;
+            // Try to get from select dropdown first, then fallback to input
+            const selectElement = document.getElementById('userSelect') as HTMLSelectElement;
+            let Name = selectElement?.value || (document.getElementById('name') as HTMLInputElement).value;
             
             if (Name.trim() === "") {
-                alert("Name cannot be empty. Please enter a valid name.");
+                alert("Name cannot be empty. Please select or enter a valid name.");
                 return;
             }
 
             try {
-                const userDocRef = doc(db, "Users", Name);
-                const userDoc = await getDoc(userDocRef);
+                // First try exact match
+                let userDocRef = doc(db, "Users", Name);
+                let userDoc = await getDoc(userDocRef);
+                
+                // If not found, try case-insensitive search
+                if (!userDoc.exists()) {
+                    const querySnapshot = await getDocs(collection(db, "Users"));
+                    let foundName = null;
+                    querySnapshot.forEach((doc) => {
+                        if (doc.id.toLowerCase() === Name.toLowerCase()) {
+                            foundName = doc.id;
+                        }
+                    });
+                    
+                    if (foundName) {
+                        Name = foundName;
+                        userDocRef = doc(db, "Users", Name);
+                        userDoc = await getDoc(userDocRef);
+                    }
+                }
                 
                 if (userDoc.exists()) {
                     const userData = userDoc.data();
                     
-                    // Initialize missing fields
+                    // Initialize missing fields including new upgrade fields
                     const updates: any = {};
                     if (userData && userData.santasPopped === undefined) {
                         updates.santasPopped = 0;
                     }
                     if (userData && userData.isAdmin === undefined) {
                         updates.isAdmin = false;
+                    }
+                    if (userData && userData.coins === undefined) {
+                        updates.coins = 0;
+                    }
+                    if (userData && userData.autoClickerLevel === undefined) {
+                        updates.autoClickerLevel = 0;
+                    }
+                    if (userData && userData.spawnSpeedLevel === undefined) {
+                        updates.spawnSpeedLevel = 0;
                     }
                     if (Object.keys(updates).length > 0) {
                         await updateDoc(userDocRef, updates);
@@ -113,7 +165,31 @@ import { useAuth } from '../context/AuthContext';
                         <p style={{ fontSize: '16px', color: '#2d5a3d', marginBottom: '20px' }}>
                             🎅 Track your Santa pops and compete on the leaderboard!
                         </p>
-                        <input id="name" type="text" placeholder='Enter your name' />
+                        {isLoginMode && allUserNames.length > 0 ? (
+                            <div>
+                                <label htmlFor="userSelect" style={{ display: 'block', marginBottom: '8px', color: '#2d5a3d' }}>
+                                    Select your name:
+                                </label>
+                                <select 
+                                    id="userSelect" 
+                                    style={{ 
+                                        width: '100%', 
+                                        padding: '10px', 
+                                        marginBottom: '10px',
+                                        borderRadius: '4px',
+                                        border: '1px solid #ccc',
+                                        fontSize: '16px'
+                                    }}
+                                >
+                                    <option value="">-- Choose your name --</option>
+                                    {allUserNames.map((name) => (
+                                        <option key={name} value={name}>{name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        ) : (
+                            <input id="name" type="text" placeholder='Enter your name' />
+                        )}
                         {isLoginMode ? (
                             <button type="submit" onClick={e => loginUser(e)}>Login</button>
                         ) : (
