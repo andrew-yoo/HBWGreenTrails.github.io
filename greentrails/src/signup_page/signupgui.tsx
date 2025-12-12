@@ -44,9 +44,9 @@ import { useAuth } from '../context/AuthContext';
                         } else {
                             if (Name.trim() !== "") {
                                 const newDocRef = doc(collection(db, "Users"), Name);
-                                setDoc(newDocRef, { Name , score: 0, santasPopped: 0 }).then(() => {
+                                setDoc(newDocRef, { Name , score: 0, santasPopped: 0, isAdmin: false }).then(() => {
                                     alert("User created successfully! You are now logged in.");
-                                    login(Name);
+                                    login(Name, false);
                                 });
                             } else {
                                 alert("Name cannot be empty. Please enter a valid name.");
@@ -69,14 +69,23 @@ import { useAuth } from '../context/AuthContext';
                 const userDoc = await getDoc(userDocRef);
                 
                 if (userDoc.exists()) {
-                    // Check if santasPopped field exists, if not initialize it
                     const userData = userDoc.data();
+                    
+                    // Initialize missing fields
+                    const updates: any = {};
                     if (userData && userData.santasPopped === undefined) {
-                        await updateDoc(userDocRef, {
-                            santasPopped: 0
-                        });
+                        updates.santasPopped = 0;
                     }
-                    login(Name);
+                    if (userData && userData.isAdmin === undefined) {
+                        updates.isAdmin = false;
+                    }
+                    if (Object.keys(updates).length > 0) {
+                        await updateDoc(userDocRef, updates);
+                    }
+                    
+                    // Login with admin status
+                    const isAdmin = userData?.isAdmin || false;
+                    login(Name, isAdmin);
                     alert(`Welcome back, ${Name}!`);
                 } else {
                     alert("User not found. Please sign up first.");

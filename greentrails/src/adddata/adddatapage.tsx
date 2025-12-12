@@ -1,13 +1,29 @@
 import '../styles/style.css'
-import React from 'react';
+import React, { useEffect } from 'react';
 import Top from '../componets/header';
 import Treefooter from '../componets/footer';
 import Navbar from'../componets/sadnavbar';
 import { db } from "../base/firebaseConfig";
 import { collection, getDocs, addDoc, updateDoc, doc, setDoc } from "firebase/firestore";
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
     const Adddatapage: React.FC = () => {
+        const { isAdmin } = useAuth();
+        const navigate = useNavigate();
 
+        useEffect(() => {
+            // Redirect non-admin users to homepage
+            if (!isAdmin) {
+                alert('Access denied. Admin privileges required.');
+                navigate('/');
+            }
+        }, [isAdmin, navigate]);
+
+        // Don't render the page if not admin
+        if (!isAdmin) {
+            return null;
+        }
 
         return (
             <div className="App-header">
