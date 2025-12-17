@@ -14,6 +14,9 @@ interface UserUpgrades {
     spawnSpeedLevel: number;
     santaWorthLevel: number;
     santasPopped: number;
+    luckyClickLevel: number;
+    goldRushLevel: number;
+    clickMultiplierLevel: number;
 }
 
 const SantaUpgrades: React.FC = () => {
@@ -22,16 +25,25 @@ const SantaUpgrades: React.FC = () => {
         autoClickerLevel: 0,
         spawnSpeedLevel: 0,
         santaWorthLevel: 0,
-        santasPopped: 0
+        santasPopped: 0,
+        luckyClickLevel: 0,
+        goldRushLevel: 0,
+        clickMultiplierLevel: 0
     });
     const [loading, setLoading] = useState(true);
 
-    // Auto-clicker costs: 10, 25, 50, 100, 200 santas
-    const autoClickerCosts = [10, 25, 50, 100, 200];
-    // Spawn speed costs: 15, 30, 60, 120, 240 santas
-    const spawnSpeedCosts = [15, 30, 60, 120, 240];
-    // Santa worth costs: 20, 40, 80, 160, 320 santas
-    const santaWorthCosts = [20, 40, 80, 160, 320];
+    // Auto-clicker costs: Extended to 10 levels
+    const autoClickerCosts = [10, 25, 50, 100, 200, 400, 800, 1600, 3200, 6400];
+    // Spawn speed costs: Extended to 10 levels
+    const spawnSpeedCosts = [15, 30, 60, 120, 240, 480, 960, 1920, 3840, 7680];
+    // Santa worth costs: Extended to 10 levels
+    const santaWorthCosts = [20, 40, 80, 160, 320, 640, 1280, 2560, 5120, 10240];
+    // Lucky Click costs: 5% chance per level to get double points
+    const luckyClickCosts = [30, 75, 150, 300, 600, 1200, 2400, 4800, 9600, 19200];
+    // Gold Rush costs: Occasionally spawn golden santas worth 5x points
+    const goldRushCosts = [50, 125, 250, 500, 1000, 2000, 4000, 8000, 16000, 32000];
+    // Click Multiplier costs: Multiplies all clicks by (1 + level * 0.1)
+    const clickMultiplierCosts = [100, 250, 500, 1000, 2000, 4000, 8000, 16000, 32000, 64000];
 
     useEffect(() => {
         if (currentUser) {
@@ -70,7 +82,10 @@ const SantaUpgrades: React.FC = () => {
                     autoClickerLevel: userData.autoClickerLevel || 0,
                     spawnSpeedLevel: userData.spawnSpeedLevel || 0,
                     santaWorthLevel: userData.santaWorthLevel || 0,
-                    santasPopped: userData.santasPopped || 0
+                    santasPopped: userData.santasPopped || 0,
+                    luckyClickLevel: userData.luckyClickLevel || 0,
+                    goldRushLevel: userData.goldRushLevel || 0,
+                    clickMultiplierLevel: userData.clickMultiplierLevel || 0
                 });
             }
         } catch (error) {
@@ -191,6 +206,123 @@ const SantaUpgrades: React.FC = () => {
             });
             
             showNotification(`Santa worth upgraded to level ${level + 1}!`, "success");
+        } catch (error) {
+            console.error("Error purchasing upgrade:", error);
+            showNotification("Failed to purchase upgrade. Please try again.", "error");
+        }
+    };
+
+    const purchaseLuckyClick = async () => {
+        if (!currentUser) {
+            showNotification("Please login to purchase upgrades!", "error");
+            return;
+        }
+
+        const level = upgrades.luckyClickLevel;
+        if (level >= luckyClickCosts.length) {
+            showNotification("Max level reached!", "info");
+            return;
+        }
+
+        const cost = luckyClickCosts[level];
+        if (upgrades.santasPopped < cost) {
+            showNotification(`Not enough santas! You need ${cost} santas but only have ${upgrades.santasPopped}.`, "error");
+            return;
+        }
+
+        try {
+            const userDocRef = doc(db, "Users", currentUser);
+            await updateDoc(userDocRef, {
+                santasPopped: increment(-cost),
+                luckyClickLevel: increment(1)
+            });
+            
+            // Update local state
+            setUpgrades({
+                ...upgrades,
+                santasPopped: upgrades.santasPopped - cost,
+                luckyClickLevel: upgrades.luckyClickLevel + 1
+            });
+            
+            showNotification(`Lucky click upgraded to level ${level + 1}!`, "success");
+        } catch (error) {
+            console.error("Error purchasing upgrade:", error);
+            showNotification("Failed to purchase upgrade. Please try again.", "error");
+        }
+    };
+
+    const purchaseGoldRush = async () => {
+        if (!currentUser) {
+            showNotification("Please login to purchase upgrades!", "error");
+            return;
+        }
+
+        const level = upgrades.goldRushLevel;
+        if (level >= goldRushCosts.length) {
+            showNotification("Max level reached!", "info");
+            return;
+        }
+
+        const cost = goldRushCosts[level];
+        if (upgrades.santasPopped < cost) {
+            showNotification(`Not enough santas! You need ${cost} santas but only have ${upgrades.santasPopped}.`, "error");
+            return;
+        }
+
+        try {
+            const userDocRef = doc(db, "Users", currentUser);
+            await updateDoc(userDocRef, {
+                santasPopped: increment(-cost),
+                goldRushLevel: increment(1)
+            });
+            
+            // Update local state
+            setUpgrades({
+                ...upgrades,
+                santasPopped: upgrades.santasPopped - cost,
+                goldRushLevel: upgrades.goldRushLevel + 1
+            });
+            
+            showNotification(`Gold rush upgraded to level ${level + 1}!`, "success");
+        } catch (error) {
+            console.error("Error purchasing upgrade:", error);
+            showNotification("Failed to purchase upgrade. Please try again.", "error");
+        }
+    };
+
+    const purchaseClickMultiplier = async () => {
+        if (!currentUser) {
+            showNotification("Please login to purchase upgrades!", "error");
+            return;
+        }
+
+        const level = upgrades.clickMultiplierLevel;
+        if (level >= clickMultiplierCosts.length) {
+            showNotification("Max level reached!", "info");
+            return;
+        }
+
+        const cost = clickMultiplierCosts[level];
+        if (upgrades.santasPopped < cost) {
+            showNotification(`Not enough santas! You need ${cost} santas but only have ${upgrades.santasPopped}.`, "error");
+            return;
+        }
+
+        try {
+            const userDocRef = doc(db, "Users", currentUser);
+            await updateDoc(userDocRef, {
+                santasPopped: increment(-cost),
+                clickMultiplierLevel: increment(1)
+            });
+            
+            // Update local state
+            setUpgrades({
+                ...upgrades,
+                santasPopped: upgrades.santasPopped - cost,
+                clickMultiplierLevel: upgrades.clickMultiplierLevel + 1
+            });
+            
+            showNotification(`Click multiplier upgraded to level ${level + 1}!`, "success");
         } catch (error) {
             console.error("Error purchasing upgrade:", error);
             showNotification("Failed to purchase upgrade. Please try again.", "error");
@@ -340,7 +472,7 @@ const SantaUpgrades: React.FC = () => {
                             fontSize: '14px',
                             fontWeight: 'bold'
                         }}>
-                            Level {upgrades.autoClickerLevel}
+                            Level {upgrades.autoClickerLevel}/{autoClickerCosts.length}
                         </div>
                         <h3 style={{ color: '#4CAF50', marginBottom: '15px', fontSize: '28px', fontWeight: 'bold' }}>
                             🖱️ Auto-Clicker
@@ -432,7 +564,7 @@ const SantaUpgrades: React.FC = () => {
                             fontSize: '14px',
                             fontWeight: 'bold'
                         }}>
-                            Level {upgrades.spawnSpeedLevel}
+                            Level {upgrades.spawnSpeedLevel}/{spawnSpeedCosts.length}
                         </div>
                         <h3 style={{ color: '#2196F3', marginBottom: '15px', fontSize: '28px', fontWeight: 'bold' }}>
                             ⚡ Spawn Speed
@@ -524,7 +656,7 @@ const SantaUpgrades: React.FC = () => {
                             fontSize: '14px',
                             fontWeight: 'bold'
                         }}>
-                            Level {upgrades.santaWorthLevel}
+                            Level {upgrades.santaWorthLevel}/{santaWorthCosts.length}
                         </div>
                         <h3 style={{ color: '#FF9800', marginBottom: '15px', fontSize: '28px', fontWeight: 'bold' }}>
                             💎 Santa Worth
@@ -593,6 +725,282 @@ const SantaUpgrades: React.FC = () => {
                             </div>
                         )}
                     </div>
+
+                    {/* Lucky Click Upgrade - NEW */}
+                    <div style={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        padding: '25px',
+                        borderRadius: '15px',
+                        boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
+                        border: '3px solid #9C27B0',
+                        transition: 'transform 0.2s',
+                        position: 'relative',
+                        overflow: 'hidden'
+                    }}>
+                        <div style={{
+                            position: 'absolute',
+                            top: '10px',
+                            right: '10px',
+                            backgroundColor: '#9C27B0',
+                            color: 'white',
+                            padding: '5px 15px',
+                            borderRadius: '20px',
+                            fontSize: '14px',
+                            fontWeight: 'bold'
+                        }}>
+                            Level {upgrades.luckyClickLevel}/{luckyClickCosts.length}
+                        </div>
+                        <h3 style={{ color: '#9C27B0', marginBottom: '15px', fontSize: '28px', fontWeight: 'bold' }}>
+                            🍀 Lucky Click
+                        </h3>
+                        <p style={{ marginBottom: '15px', color: '#555', lineHeight: '1.6', minHeight: '80px' }}>
+                            Gives you a chance to get double points on each click! Feeling lucky?
+                            {upgrades.luckyClickLevel > 0 && (
+                                <span style={{ display: 'block', marginTop: '10px', color: '#9C27B0', fontWeight: 'bold' }}>
+                                    ✓ Active: {upgrades.luckyClickLevel * 5}% chance for 2x points
+                                </span>
+                            )}
+                        </p>
+                        {upgrades.luckyClickLevel < luckyClickCosts.length ? (
+                            <>
+                                <p style={{ fontSize: '20px', marginBottom: '20px', textAlign: 'center' }}>
+                                    Cost: <strong style={{ color: '#d32f2f', fontSize: '24px' }}>
+                                        {luckyClickCosts[upgrades.luckyClickLevel]} 🎅
+                                    </strong>
+                                </p>
+                                <button 
+                                    onClick={purchaseLuckyClick}
+                                    disabled={upgrades.santasPopped < luckyClickCosts[upgrades.luckyClickLevel]}
+                                    style={{
+                                        padding: '15px 25px',
+                                        fontSize: '18px',
+                                        fontWeight: 'bold',
+                                        backgroundColor: upgrades.santasPopped >= luckyClickCosts[upgrades.luckyClickLevel] ? '#9C27B0' : '#ccc',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        cursor: upgrades.santasPopped >= luckyClickCosts[upgrades.luckyClickLevel] ? 'pointer' : 'not-allowed',
+                                        width: '100%',
+                                        transition: 'all 0.3s',
+                                        boxShadow: upgrades.santasPopped >= luckyClickCosts[upgrades.luckyClickLevel] ? '0 4px 8px rgba(156, 39, 176, 0.3)' : 'none'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        if (upgrades.santasPopped >= luckyClickCosts[upgrades.luckyClickLevel]) {
+                                            e.currentTarget.style.transform = 'scale(1.05)';
+                                        }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.transform = 'scale(1)';
+                                    }}
+                                    onFocus={(e) => {
+                                        if (upgrades.santasPopped >= luckyClickCosts[upgrades.luckyClickLevel]) {
+                                            e.currentTarget.style.transform = 'scale(1.05)';
+                                        }
+                                    }}
+                                    onBlur={(e) => {
+                                        e.currentTarget.style.transform = 'scale(1)';
+                                    }}
+                                >
+                                    ⬆️ Upgrade Now
+                                </button>
+                            </>
+                        ) : (
+                            <div style={{ 
+                                textAlign: 'center',
+                                padding: '20px',
+                                backgroundColor: '#f3e5f5',
+                                borderRadius: '8px'
+                            }}>
+                                <p style={{ color: '#9C27B0', fontWeight: 'bold', fontSize: '20px', margin: 0 }}>
+                                    ✓ MAX LEVEL REACHED!
+                                </p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Gold Rush Upgrade - NEW */}
+                    <div style={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        padding: '25px',
+                        borderRadius: '15px',
+                        boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
+                        border: '3px solid #FFD700',
+                        transition: 'transform 0.2s',
+                        position: 'relative',
+                        overflow: 'hidden'
+                    }}>
+                        <div style={{
+                            position: 'absolute',
+                            top: '10px',
+                            right: '10px',
+                            backgroundColor: '#FFD700',
+                            color: '#333',
+                            padding: '5px 15px',
+                            borderRadius: '20px',
+                            fontSize: '14px',
+                            fontWeight: 'bold'
+                        }}>
+                            Level {upgrades.goldRushLevel}/{goldRushCosts.length}
+                        </div>
+                        <h3 style={{ color: '#DAA520', marginBottom: '15px', fontSize: '28px', fontWeight: 'bold' }}>
+                            🌟 Gold Rush
+                        </h3>
+                        <p style={{ marginBottom: '15px', color: '#555', lineHeight: '1.6', minHeight: '80px' }}>
+                            Occasionally spawn golden santas worth 5x normal points! Strike gold!
+                            {upgrades.goldRushLevel > 0 && (
+                                <span style={{ display: 'block', marginTop: '10px', color: '#DAA520', fontWeight: 'bold' }}>
+                                    ✓ Active: {upgrades.goldRushLevel * 3}% chance for golden santa
+                                </span>
+                            )}
+                        </p>
+                        {upgrades.goldRushLevel < goldRushCosts.length ? (
+                            <>
+                                <p style={{ fontSize: '20px', marginBottom: '20px', textAlign: 'center' }}>
+                                    Cost: <strong style={{ color: '#d32f2f', fontSize: '24px' }}>
+                                        {goldRushCosts[upgrades.goldRushLevel]} 🎅
+                                    </strong>
+                                </p>
+                                <button 
+                                    onClick={purchaseGoldRush}
+                                    disabled={upgrades.santasPopped < goldRushCosts[upgrades.goldRushLevel]}
+                                    style={{
+                                        padding: '15px 25px',
+                                        fontSize: '18px',
+                                        fontWeight: 'bold',
+                                        backgroundColor: upgrades.santasPopped >= goldRushCosts[upgrades.goldRushLevel] ? '#FFD700' : '#ccc',
+                                        color: '#333',
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        cursor: upgrades.santasPopped >= goldRushCosts[upgrades.goldRushLevel] ? 'pointer' : 'not-allowed',
+                                        width: '100%',
+                                        transition: 'all 0.3s',
+                                        boxShadow: upgrades.santasPopped >= goldRushCosts[upgrades.goldRushLevel] ? '0 4px 8px rgba(255, 215, 0, 0.3)' : 'none'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        if (upgrades.santasPopped >= goldRushCosts[upgrades.goldRushLevel]) {
+                                            e.currentTarget.style.transform = 'scale(1.05)';
+                                        }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.transform = 'scale(1)';
+                                    }}
+                                    onFocus={(e) => {
+                                        if (upgrades.santasPopped >= goldRushCosts[upgrades.goldRushLevel]) {
+                                            e.currentTarget.style.transform = 'scale(1.05)';
+                                        }
+                                    }}
+                                    onBlur={(e) => {
+                                        e.currentTarget.style.transform = 'scale(1)';
+                                    }}
+                                >
+                                    ⬆️ Upgrade Now
+                                </button>
+                            </>
+                        ) : (
+                            <div style={{ 
+                                textAlign: 'center',
+                                padding: '20px',
+                                backgroundColor: '#fffbea',
+                                borderRadius: '8px'
+                            }}>
+                                <p style={{ color: '#DAA520', fontWeight: 'bold', fontSize: '20px', margin: 0 }}>
+                                    ✓ MAX LEVEL REACHED!
+                                </p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Click Multiplier Upgrade - NEW */}
+                    <div style={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        padding: '25px',
+                        borderRadius: '15px',
+                        boxShadow: '0 8px 16px rgba(0,0,0,0.2)',
+                        border: '3px solid #E91E63',
+                        transition: 'transform 0.2s',
+                        position: 'relative',
+                        overflow: 'hidden'
+                    }}>
+                        <div style={{
+                            position: 'absolute',
+                            top: '10px',
+                            right: '10px',
+                            backgroundColor: '#E91E63',
+                            color: 'white',
+                            padding: '5px 15px',
+                            borderRadius: '20px',
+                            fontSize: '14px',
+                            fontWeight: 'bold'
+                        }}>
+                            Level {upgrades.clickMultiplierLevel}/{clickMultiplierCosts.length}
+                        </div>
+                        <h3 style={{ color: '#E91E63', marginBottom: '15px', fontSize: '28px', fontWeight: 'bold' }}>
+                            ⚡ Click Multiplier
+                        </h3>
+                        <p style={{ marginBottom: '15px', color: '#555', lineHeight: '1.6', minHeight: '80px' }}>
+                            Multiplies all your clicks! The ultimate power-up for serious santa hunters.
+                            {upgrades.clickMultiplierLevel > 0 && (
+                                <span style={{ display: 'block', marginTop: '10px', color: '#E91E63', fontWeight: 'bold' }}>
+                                    ✓ Active: {(1 + upgrades.clickMultiplierLevel * 0.1).toFixed(1)}x multiplier
+                                </span>
+                            )}
+                        </p>
+                        {upgrades.clickMultiplierLevel < clickMultiplierCosts.length ? (
+                            <>
+                                <p style={{ fontSize: '20px', marginBottom: '20px', textAlign: 'center' }}>
+                                    Cost: <strong style={{ color: '#d32f2f', fontSize: '24px' }}>
+                                        {clickMultiplierCosts[upgrades.clickMultiplierLevel]} 🎅
+                                    </strong>
+                                </p>
+                                <button 
+                                    onClick={purchaseClickMultiplier}
+                                    disabled={upgrades.santasPopped < clickMultiplierCosts[upgrades.clickMultiplierLevel]}
+                                    style={{
+                                        padding: '15px 25px',
+                                        fontSize: '18px',
+                                        fontWeight: 'bold',
+                                        backgroundColor: upgrades.santasPopped >= clickMultiplierCosts[upgrades.clickMultiplierLevel] ? '#E91E63' : '#ccc',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '8px',
+                                        cursor: upgrades.santasPopped >= clickMultiplierCosts[upgrades.clickMultiplierLevel] ? 'pointer' : 'not-allowed',
+                                        width: '100%',
+                                        transition: 'all 0.3s',
+                                        boxShadow: upgrades.santasPopped >= clickMultiplierCosts[upgrades.clickMultiplierLevel] ? '0 4px 8px rgba(233, 30, 99, 0.3)' : 'none'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        if (upgrades.santasPopped >= clickMultiplierCosts[upgrades.clickMultiplierLevel]) {
+                                            e.currentTarget.style.transform = 'scale(1.05)';
+                                        }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.transform = 'scale(1)';
+                                    }}
+                                    onFocus={(e) => {
+                                        if (upgrades.santasPopped >= clickMultiplierCosts[upgrades.clickMultiplierLevel]) {
+                                            e.currentTarget.style.transform = 'scale(1.05)';
+                                        }
+                                    }}
+                                    onBlur={(e) => {
+                                        e.currentTarget.style.transform = 'scale(1)';
+                                    }}
+                                >
+                                    ⬆️ Upgrade Now
+                                </button>
+                            </>
+                        ) : (
+                            <div style={{ 
+                                textAlign: 'center',
+                                padding: '20px',
+                                backgroundColor: '#fce4ec',
+                                borderRadius: '8px'
+                            }}>
+                                <p style={{ color: '#E91E63', fontWeight: 'bold', fontSize: '20px', margin: 0 }}>
+                                    ✓ MAX LEVEL REACHED!
+                                </p>
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Instructions */}
@@ -619,7 +1027,10 @@ const SantaUpgrades: React.FC = () => {
                         <li><strong>Auto-clicker</strong> works on ALL pages across the site automatically</li>
                         <li><strong>Spawn speed</strong> increases how often Santas appear</li>
                         <li><strong>Santa worth</strong> makes each click more valuable</li>
-                        <li><strong>Pro tip:</strong> Combine all three upgrades for maximum efficiency!</li>
+                        <li><strong>Lucky click</strong> gives you a chance for double points</li>
+                        <li><strong>Gold rush</strong> spawns special golden santas worth 5x points</li>
+                        <li><strong>Click multiplier</strong> boosts all your clicks exponentially</li>
+                        <li><strong>Pro tip:</strong> Combine all upgrades for maximum efficiency!</li>
                     </ol>
                 </div>
             </div>
