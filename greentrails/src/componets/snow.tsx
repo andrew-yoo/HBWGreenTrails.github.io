@@ -63,6 +63,13 @@ export default function Snow({
     const SPAWN_SPEED_REDUCTION_FACTOR = 0.8; // 20% reduction per level
     const MIN_SPAWN_INTERVAL = 1000; // 1 second minimum
     
+    // Constants for upgrade mechanics
+    const GOLD_RUSH_CHANCE_PER_LEVEL = 0.03; // 3% per level
+    const GOLDEN_SANTA_MULTIPLIER = 5; // Golden santas worth 5x
+    const LUCKY_CLICK_CHANCE_PER_LEVEL = 0.05; // 5% per level
+    const LUCKY_CLICK_MULTIPLIER = 2; // Lucky clicks worth 2x
+    const CLICK_MULTIPLIER_PER_LEVEL = 0.1; // 10% per level (1 + level * 0.1)
+    
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const rafRef = useRef<number | null>(null);
     const particlesRef = useRef<Particle[]>([]);
@@ -163,6 +170,30 @@ export default function Snow({
         } catch (error) {
             console.error("Error loading upgrades:", error);
         }
+    };
+
+    // Helper function to calculate points with all upgrade bonuses applied
+    const calculateUpgradePoints = (basePoints: number, isGolden: boolean): { points: number, isLucky: boolean } => {
+        let points = basePoints;
+        let isLucky = false;
+        
+        // Gold Rush: Golden santas are worth 5x
+        if (isGolden) {
+            points *= GOLDEN_SANTA_MULTIPLIER;
+        }
+        
+        // Lucky Click: Chance per level for double points
+        const luckyChance = luckyClickLevelRef.current * LUCKY_CLICK_CHANCE_PER_LEVEL;
+        if (Math.random() < luckyChance) {
+            points *= LUCKY_CLICK_MULTIPLIER;
+            isLucky = true;
+        }
+        
+        // Click Multiplier: Adds (1 + level * factor)x to all clicks
+        const clickMultiplier = 1 + (clickMultiplierLevelRef.current * CLICK_MULTIPLIER_PER_LEVEL);
+        points = Math.round(points * clickMultiplier);
+        
+        return { points, isLucky };
     };
 
     useEffect(() => {
@@ -341,8 +372,7 @@ export default function Snow({
             const vx = (2 + Math.random() * 2) * (dir === 1 ? 1 : -1) * Math.max(0.5, speed);
             
             // Gold Rush: Determine if this santa should be golden
-            // Each level gives 3% chance (so level 10 = 30% chance)
-            const goldRushChance = goldRushLevelRef.current * 0.03; // 3% per level
+            const goldRushChance = goldRushLevelRef.current * GOLD_RUSH_CHANCE_PER_LEVEL;
             const isGolden = Math.random() < goldRushChance;
             
             const santa: Santa = {
@@ -411,32 +441,23 @@ export default function Snow({
                     if (user) {
                         console.log('User is logged in, incrementing santa count for:', user);
                         
-                        // Calculate points for this santa pop
-                        let points = santaWorthLevelRef.current + 1; // Base worth from Santa Worth upgrade
+                        // Calculate points for this santa pop using helper function
+                        const basePoints = santaWorthLevelRef.current + 1; // Base worth from Santa Worth upgrade
+                        const { points, isLucky } = calculateUpgradePoints(basePoints, s.isGolden);
                         
-                        // Gold Rush: Golden santas are worth 5x
+                        // Show visual feedback
                         if (s.isGolden) {
-                            points *= 5;
                             console.log('Golden santa clicked! 5x multiplier applied');
                         }
-                        
-                        // Lucky Click: 5% chance per level for double points
-                        const luckyChance = luckyClickLevelRef.current * 0.05; // 5% per level
-                        if (Math.random() < luckyChance) {
-                            points *= 2;
+                        if (isLucky) {
                             console.log('Lucky click! 2x multiplier applied');
-                            // Show a visual indicator for lucky click
                             showNotification('🍀 Lucky Click! Double points!', 'success');
                         }
                         
-                        // Click Multiplier: Adds (1 + level * 0.1)x to all clicks
-                        const clickMultiplier = 1 + (clickMultiplierLevelRef.current * 0.1);
-                        points = Math.round(points * clickMultiplier);
-                        
                         console.log('Total points for this click:', points, {
-                            baseWorth: santaWorthLevelRef.current + 1,
+                            baseWorth: basePoints,
                             isGolden: s.isGolden,
-                            clickMultiplier
+                            isLucky
                         });
                         
                         try {
@@ -503,24 +524,10 @@ export default function Snow({
                     spawnExplosion(s.x, s.y, explosionColor); // Green for auto-click, gold for golden
                     santas.splice(randomIndex, 1);
                     
-                    // Calculate points for auto-clicked santa (same logic as manual click)
+                    // Calculate points for auto-clicked santa using helper function
                     const user = currentUserRef.current;
-                    let points = santaWorthLevelRef.current + 1; // Base worth
-                    
-                    // Gold Rush: Golden santas are worth 5x
-                    if (s.isGolden) {
-                        points *= 5;
-                    }
-                    
-                    // Lucky Click: 5% chance per level for double points
-                    const luckyChance = luckyClickLevelRef.current * 0.05;
-                    if (Math.random() < luckyChance) {
-                        points *= 2;
-                    }
-                    
-                    // Click Multiplier: Adds (1 + level * 0.1)x to all clicks
-                    const clickMultiplier = 1 + (clickMultiplierLevelRef.current * 0.1);
-                    points = Math.round(points * clickMultiplier);
+                    const basePoints = santaWorthLevelRef.current + 1; // Base worth
+                    const { points } = calculateUpgradePoints(basePoints, s.isGolden);
                     
                     if (user) {
                         try {
