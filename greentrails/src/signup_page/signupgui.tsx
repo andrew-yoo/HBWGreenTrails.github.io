@@ -9,28 +9,48 @@ import { getFirestore } from "firebase/firestore";
 import { Button, Container } from 'react-bootstrap';
 import { addDoc, setDoc } from "firebase/firestore";
 import { useAuth } from '../context/AuthContext';
+import { showNotification } from '../componets/Notification';
 
 
     const Signupgui: React.FC = () => {
         const [leaderboardData, setLeaderboardData] = React.useState<any[]>([]);
         const [opportunities, setOpportunities] = React.useState<any[]>([]);
         const [isLoginMode, setIsLoginMode] = React.useState(false);
+        const [allUserNames, setAllUserNames] = React.useState<string[]>([]);
+        const [nameInput, setNameInput] = React.useState('');
+        const [selectedUser, setSelectedUser] = React.useState('');
         const { currentUser, login, logout } = useAuth();
         const navigate = useNavigate();
     
         useEffect(() => {
-            
+            // Fetch all usernames for the dropdown
+            const fetchUserNames = async () => {
+                try {
+                    const querySnapshot = await getDocs(collection(db, "Users"));
+                    const names = querySnapshot.docs.map((doc) => doc.id);
+                    setAllUserNames(names.sort());
+                } catch (error) {
+                    console.error("Error fetching usernames:", error);
+                }
+            };
+            fetchUserNames();
         }, []);
 
         function adduser(event: React.MouseEvent<HTMLButtonElement>) {
+            const Name = nameInput.trim();
             
-            const Name = (document.getElementById('name') as HTMLInputElement).value;
+            if (Name === "") {
+                showNotification("Name cannot be empty. Please enter a valid name.", "error");
+                return;
+            }
+            
             console.log(Name);
                     const checkIdExists = async (id: string) => {
                         const querySnapshot = await getDocs(collection(db, "Users"));
                         let idExists = false;
                         querySnapshot.forEach((doc) => {
-                            if (doc.id === id) {
+                            // Case-insensitive comparison
+                            if (doc.id.toLowerCase() === id.toLowerCase()) {
                                 idExists = true;
                             }
                         });
@@ -39,45 +59,78 @@ import { useAuth } from '../context/AuthContext';
 
                     checkIdExists(Name).then((exists) => {
                         if (exists) {
-                            alert("name already in use. Please choose a different name.");
+                            showNotification("Name already in use. Please choose a different name.", "error");
                             return;
                         } else {
-                            if (Name.trim() !== "") {
-                                const newDocRef = doc(collection(db, "Users"), Name);
-                                setDoc(newDocRef, { Name , score: 0, santasPopped: 0, isAdmin: false }).then(() => {
-                                    alert("User created successfully! You are now logged in.");
-                                    login(Name, false);
-                                });
-                            } else {
-                                alert("Name cannot be empty. Please enter a valid name.");
-                            }
+                            // Store name as-is but check will be case-insensitive
+                            const newDocRef = doc(collection(db, "Users"), Name);
+                            setDoc(newDocRef, { 
+                                Name, 
+                                score: 0, 
+                                santasPopped: 0, 
+                                isAdmin: false,
+                                autoClickerLevel: 0,
+                                spawnSpeedLevel: 0
+                            }).then(() => {
+                                showNotification("User created successfully! You are now logged in.", "success");
+                                login(Name, false);
+                                // Refresh the username list
+                                setAllUserNames([...allUserNames, Name].sort());
+                                setNameInput('');
+                            });
                         }
                     });
             
         }
 
         async function loginUser(event: React.MouseEvent<HTMLButtonElement>) {
-            const Name = (document.getElementById('name') as HTMLInputElement).value;
+            // Use selected user from dropdown or typed name
+            let Name = selectedUser || nameInput;
+            Name = Name.trim();
             
-            if (Name.trim() === "") {
-                alert("Name cannot be empty. Please enter a valid name.");
+            if (Name === "") {
+                showNotification("Name cannot be empty. Please select or enter a valid name.", "error");
                 return;
             }
 
             try {
-                const userDocRef = doc(db, "Users", Name);
-                const userDoc = await getDoc(userDocRef);
+                // First try exact match
+                let userDocRef = doc(db, "Users", Name);
+                let userDoc = await getDoc(userDocRef);
+                
+                // If not found, try case-insensitive search
+                if (!userDoc.exists()) {
+                    const querySnapshot = await getDocs(collection(db, "Users"));
+                    let foundName = null;
+                    querySnapshot.forEach((doc) => {
+                        if (doc.id.toLowerCase() === Name.toLowerCase()) {
+                            foundName = doc.id;
+                        }
+                    });
+                    
+                    if (foundName) {
+                        Name = foundName;
+                        userDocRef = doc(db, "Users", Name);
+                        userDoc = await getDoc(userDocRef);
+                    }
+                }
                 
                 if (userDoc.exists()) {
                     const userData = userDoc.data();
                     
-                    // Initialize missing fields
+                    // Initialize missing fields including new upgrade fields (but not coins)
                     const updates: any = {};
                     if (userData && userData.santasPopped === undefined) {
                         updates.santasPopped = 0;
                     }
                     if (userData && userData.isAdmin === undefined) {
                         updates.isAdmin = false;
+                    }
+                    if (userData && userData.autoClickerLevel === undefined) {
+                        updates.autoClickerLevel = 0;
+                    }
+                    if (userData && userData.spawnSpeedLevel === undefined) {
+                        updates.spawnSpeedLevel = 0;
                     }
                     if (Object.keys(updates).length > 0) {
                         await updateDoc(userDocRef, updates);
@@ -86,13 +139,13 @@ import { useAuth } from '../context/AuthContext';
                     // Login with admin status
                     const isAdmin = userData?.isAdmin || false;
                     login(Name, isAdmin);
-                    alert(`Welcome back, ${Name}!`);
+                    showNotification(`Welcome back, ${Name}!`, "success");
                 } else {
-                    alert("User not found. Please sign up first.");
+                    showNotification("User not found. Please sign up first.", "error");
                 }
             } catch (error) {
                 console.error("Error logging in:", error);
-                alert("Error logging in. Please try again.");
+                showNotification("Error logging in. Please try again.", "error");
             }
         }
 
@@ -113,7 +166,39 @@ import { useAuth } from '../context/AuthContext';
                         <p style={{ fontSize: '16px', color: '#2d5a3d', marginBottom: '20px' }}>
                             🎅 Track your Santa pops and compete on the leaderboard!
                         </p>
-                        <input id="name" type="text" placeholder='Enter your name' />
+                        {isLoginMode && allUserNames.length > 0 ? (
+                            <div>
+                                <label htmlFor="userSelect" style={{ display: 'block', marginBottom: '8px', color: '#2d5a3d' }}>
+                                    Select your name:
+                                </label>
+                                <select 
+                                    id="userSelect"
+                                    value={selectedUser}
+                                    onChange={(e) => setSelectedUser(e.target.value)}
+                                    style={{ 
+                                        width: '100%', 
+                                        padding: '10px', 
+                                        marginBottom: '10px',
+                                        borderRadius: '4px',
+                                        border: '1px solid #ccc',
+                                        fontSize: '16px'
+                                    }}
+                                >
+                                    <option value="">-- Choose your name --</option>
+                                    {allUserNames.map((name) => (
+                                        <option key={name} value={name}>{name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        ) : (
+                            <input 
+                                id="name" 
+                                type="text" 
+                                placeholder='Enter your name'
+                                value={nameInput}
+                                onChange={(e) => setNameInput(e.target.value)}
+                            />
+                        )}
                         {isLoginMode ? (
                             <button type="submit" onClick={e => loginUser(e)}>Login</button>
                         ) : (
@@ -123,7 +208,11 @@ import { useAuth } from '../context/AuthContext';
                             <p style={{ marginBottom: '10px', color: '#666' }}>
                                 {isLoginMode ? "Don't have an account?" : "Already have an account?"}
                             </p>
-                            <button onClick={() => setIsLoginMode(!isLoginMode)}>
+                            <button onClick={() => {
+                                setIsLoginMode(!isLoginMode);
+                                setNameInput('');
+                                setSelectedUser('');
+                            }}>
                                 {isLoginMode ? 'Create New Account' : 'Login Instead'}
                             </button>
                         </div>

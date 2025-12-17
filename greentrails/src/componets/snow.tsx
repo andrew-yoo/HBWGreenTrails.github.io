@@ -1,8 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import santaSVG from "./santa.tsx";
 import { useAuth } from "../context/AuthContext";
 import { db } from "../base/firebaseConfig";
-import { doc, updateDoc, increment } from "firebase/firestore";
+import { doc, updateDoc, increment, getDoc } from "firebase/firestore";
+import { showNotification } from "./Notification";
 
 type SnowProps = {
     particleCount?: number;
@@ -52,6 +53,15 @@ export default function Snow({
     color = "#FFF",
     zIndex = 9999,
 }: SnowProps) {
+    // Constants for auto-clicker and spawn speed calculations
+    const BASE_AUTO_CLICK_INTERVAL = 10000; // 10 seconds
+    const AUTO_CLICK_LEVEL_REDUCTION = 2000; // 2 seconds per level
+    const MIN_AUTO_CLICK_INTERVAL = 2000; // 2 seconds minimum
+    
+    const BASE_SPAWN_INTERVAL = 5000; // 5 seconds
+    const SPAWN_SPEED_REDUCTION_FACTOR = 0.8; // 20% reduction per level
+    const MIN_SPAWN_INTERVAL = 1000; // 1 second minimum
+    
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const rafRef = useRef<number | null>(null);
     const particlesRef = useRef<Particle[]>([]);
@@ -60,6 +70,7 @@ export default function Snow({
     const santaImageRef = useRef<HTMLImageElement | null>(null);
     const santaSpritesRef = useRef<Santa[]>([]);
     const spawnIntervalRef = useRef<number | null>(null);
+    const autoClickerIntervalRef = useRef<number | null>(null);
 
     // new: explosion particles
     const explosionsRef = useRef<ExpParticle[]>([]);
@@ -70,11 +81,53 @@ export default function Snow({
     // Store currentUser in a ref so click handler always has latest value
     const currentUserRef = useRef<string | null>(currentUser);
     
+    // Store user upgrades
+    const [autoClickerLevel, setAutoClickerLevel] = useState(0);
+    const [spawnSpeedLevel, setSpawnSpeedLevel] = useState(0);
+    const autoClickerLevelRef = useRef(0);
+    const spawnSpeedLevelRef = useRef(0);
+    
     // Update ref whenever currentUser changes
     useEffect(() => {
         currentUserRef.current = currentUser;
         console.log('Snow: currentUser updated to:', currentUser);
+        
+        // Load user upgrades when user changes
+        if (currentUser) {
+            loadUserUpgrades();
+        } else {
+            setAutoClickerLevel(0);
+            setSpawnSpeedLevel(0);
+            autoClickerLevelRef.current = 0;
+            spawnSpeedLevelRef.current = 0;
+        }
     }, [currentUser]);
+    
+    // Update refs when upgrades change
+    useEffect(() => {
+        autoClickerLevelRef.current = autoClickerLevel;
+        spawnSpeedLevelRef.current = spawnSpeedLevel;
+    }, [autoClickerLevel, spawnSpeedLevel]);
+    
+    const loadUserUpgrades = async () => {
+        if (!currentUser) return;
+        
+        try {
+            const userDocRef = doc(db, "Users", currentUser);
+            const userDoc = await getDoc(userDocRef);
+            
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                const autoLevel = userData.autoClickerLevel || 0;
+                const spawnLevel = userData.spawnSpeedLevel || 0;
+                setAutoClickerLevel(autoLevel);
+                setSpawnSpeedLevel(spawnLevel);
+                console.log('Loaded upgrades:', { autoLevel, spawnLevel });
+            }
+        } catch (error) {
+            console.error("Error loading upgrades:", error);
+        }
+    };
 
     useEffect(() => {
         const canvas = canvasRef.current!;
@@ -302,16 +355,16 @@ export default function Snow({
                                 console.log(`Santa popped! Count incremented for ${user}`);
                             }).catch((error) => {
                                 console.error("Error updating santa count:", error);
-                                alert(`Failed to save Santa pop. Error: ${error.message}`);
+                                showNotification(`Failed to save Santa pop. Error: ${error.message}`, "error");
                             });
                         } catch (error) {
                             console.error("Error creating update:", error);
                         }
                     } else {
                         console.log("No user logged in - santa pop not tracked");
-                        // Show a one-time alert to inform user they need to login
+                        // Show a one-time notification to inform user they need to login
                         if (!sessionStorage.getItem('loginReminderShown')) {
-                            alert('🎅 Login required! Go to the Sign Up page to login or create an account, then your Santa pops will be tracked on the leaderboard!');
+                            showNotification('🎅 Login required! Go to the Sign Up page to login or create an account, then your Santa pops will be tracked on the leaderboard!', "info");
                             sessionStorage.setItem('loginReminderShown', 'true');
                         }
                     }
@@ -325,9 +378,53 @@ export default function Snow({
         initParticles();
         rafRef.current = requestAnimationFrame(render);
 
-        // spawn first santa after 1s, then every 5s
-        spawnIntervalRef.current = window.setInterval(spawnSanta, 5000);
+        // Calculate spawn interval based on spawn speed level
+        // Base: 5000ms, each level reduces by 20% (multiply by 0.8)
+        const spawnSpeed = spawnSpeedLevelRef.current;
+        const spawnInterval = Math.max(MIN_SPAWN_INTERVAL, BASE_SPAWN_INTERVAL * Math.pow(SPAWN_SPEED_REDUCTION_FACTOR, spawnSpeed));
+        console.log('Santa spawn interval:', spawnInterval, 'ms (level', spawnSpeed, ')');
+
+        // spawn first santa after 1s, then at calculated interval
+        spawnIntervalRef.current = window.setInterval(spawnSanta, spawnInterval);
         const firstSpawn = window.setTimeout(spawnSanta, 1000);
+        
+        // Auto-clicker setup
+        // Only start if auto-clicker level > 0
+        // Interval: 10s, 8s, 6s, 4s, 2s for levels 1-5
+        if (autoClickerLevelRef.current > 0) {
+            const autoClickInterval = Math.max(MIN_AUTO_CLICK_INTERVAL, BASE_AUTO_CLICK_INTERVAL - autoClickerLevelRef.current * AUTO_CLICK_LEVEL_REDUCTION);
+            console.log('Auto-clicker active! Interval:', autoClickInterval, 'ms (level', autoClickerLevelRef.current, ')');
+            
+            autoClickerIntervalRef.current = window.setInterval(() => {
+                const santas = santaSpritesRef.current;
+                if (santas.length > 0 && currentUserRef.current) {
+                    // Auto-click a random santa
+                    const randomIndex = Math.floor(Math.random() * santas.length);
+                    const s = santas[randomIndex];
+                    
+                    // Spawn explosion and remove santa
+                    spawnExplosion(s.x, s.y, "#4CAF50"); // Green color for auto-click
+                    santas.splice(randomIndex, 1);
+                    
+                    // Increment santa count
+                    const user = currentUserRef.current;
+                    if (user) {
+                        try {
+                            const userDocRef = doc(db, "Users", user);
+                            updateDoc(userDocRef, {
+                                santasPopped: increment(1)
+                            }).then(() => {
+                                console.log(`Auto-clicked santa for ${user}`);
+                            }).catch((error) => {
+                                console.error("Error updating santa count:", error);
+                            });
+                        } catch (error) {
+                            console.error("Error with auto-click:", error);
+                        }
+                    }
+                }
+            }, autoClickInterval);
+        }
 
         const onResize = () => {
             setSize();
@@ -343,11 +440,12 @@ export default function Snow({
         return () => {
             if (rafRef.current) cancelAnimationFrame(rafRef.current);
             if (spawnIntervalRef.current) clearInterval(spawnIntervalRef.current);
+            if (autoClickerIntervalRef.current) clearInterval(autoClickerIntervalRef.current);
             window.clearTimeout(firstSpawn);
             window.removeEventListener("resize", onResize);
             window.removeEventListener("click", onClick);
         };
-    }, [particleCount, speed, size, color]);
+    }, [particleCount, speed, size, color, autoClickerLevel, spawnSpeedLevel]);
 
     return (
         <canvas
