@@ -15,7 +15,7 @@ import { showNotification } from '../componets/Notification';
     const Signupgui: React.FC = () => {
         const [leaderboardData, setLeaderboardData] = React.useState<any[]>([]);
         const [opportunities, setOpportunities] = React.useState<any[]>([]);
-        const [isLoginMode, setIsLoginMode] = React.useState(false);
+        const [isLoginMode, setIsLoginMode] = React.useState(true);
         const [allUserNames, setAllUserNames] = React.useState<string[]>([]);
         const [nameInput, setNameInput] = React.useState('');
         const [selectedUser, setSelectedUser] = React.useState('');
@@ -70,7 +70,11 @@ import { showNotification } from '../componets/Notification';
                                 santasPopped: 0, 
                                 isAdmin: false,
                                 autoClickerLevel: 0,
-                                spawnSpeedLevel: 0
+                                spawnSpeedLevel: 0,
+                                santaWorthLevel: 0,
+                                luckyClickLevel: 0,
+                                goldRushLevel: 0,
+                                clickMultiplierLevel: 0
                             }).then(() => {
                                 showNotification("User created successfully! You are now logged in.", "success");
                                 login(Name, false);
@@ -131,6 +135,18 @@ import { showNotification } from '../componets/Notification';
                     }
                     if (userData && userData.spawnSpeedLevel === undefined) {
                         updates.spawnSpeedLevel = 0;
+                    }
+                    if (userData && userData.santaWorthLevel === undefined) {
+                        updates.santaWorthLevel = 0;
+                    }
+                    if (userData && userData.luckyClickLevel === undefined) {
+                        updates.luckyClickLevel = 0;
+                    }
+                    if (userData && userData.goldRushLevel === undefined) {
+                        updates.goldRushLevel = 0;
+                    }
+                    if (userData && userData.clickMultiplierLevel === undefined) {
+                        updates.clickMultiplierLevel = 0;
                     }
                     if (Object.keys(updates).length > 0) {
                         await updateDoc(userDocRef, updates);
