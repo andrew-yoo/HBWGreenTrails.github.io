@@ -189,7 +189,7 @@ export default function Snow({
             isLucky = true;
         }
         
-        // Click Multiplier: Adds (1 + level * factor)x to all clicks
+        // Click Multiplier: Applies (1 + level * factor)x multiplier to all clicks
         const clickMultiplier = 1 + (clickMultiplierLevelRef.current * CLICK_MULTIPLIER_PER_LEVEL);
         points = Math.round(points * clickMultiplier);
         
@@ -442,7 +442,8 @@ export default function Snow({
                         console.log('User is logged in, incrementing santa count for:', user);
                         
                         // Calculate points for this santa pop using helper function
-                        const basePoints = santaWorthLevelRef.current + 1; // Base worth from Santa Worth upgrade
+                        // Base worth is (santaWorthLevel + 1), so level 0 = 1 point, level 1 = 2 points, etc.
+                        const basePoints = santaWorthLevelRef.current + 1;
                         const { points, isLucky } = calculateUpgradePoints(basePoints, s.isGolden);
                         
                         // Show visual feedback
@@ -526,7 +527,8 @@ export default function Snow({
                     
                     // Calculate points for auto-clicked santa using helper function
                     const user = currentUserRef.current;
-                    const basePoints = santaWorthLevelRef.current + 1; // Base worth
+                    // Base worth is (santaWorthLevel + 1), so level 0 = 1 point, level 1 = 2 points, etc.
+                    const basePoints = santaWorthLevelRef.current + 1;
                     const { points } = calculateUpgradePoints(basePoints, s.isGolden);
                     
                     if (user) {
