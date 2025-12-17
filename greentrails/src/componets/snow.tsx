@@ -84,8 +84,10 @@ export default function Snow({
     // Store user upgrades
     const [autoClickerLevel, setAutoClickerLevel] = useState(0);
     const [spawnSpeedLevel, setSpawnSpeedLevel] = useState(0);
+    const [santaWorthLevel, setSantaWorthLevel] = useState(0);
     const autoClickerLevelRef = useRef(0);
     const spawnSpeedLevelRef = useRef(0);
+    const santaWorthLevelRef = useRef(0);
     
     // Update ref whenever currentUser changes
     useEffect(() => {
@@ -98,8 +100,10 @@ export default function Snow({
         } else {
             setAutoClickerLevel(0);
             setSpawnSpeedLevel(0);
+            setSantaWorthLevel(0);
             autoClickerLevelRef.current = 0;
             spawnSpeedLevelRef.current = 0;
+            santaWorthLevelRef.current = 0;
         }
     }, [currentUser]);
     
@@ -107,7 +111,8 @@ export default function Snow({
     useEffect(() => {
         autoClickerLevelRef.current = autoClickerLevel;
         spawnSpeedLevelRef.current = spawnSpeedLevel;
-    }, [autoClickerLevel, spawnSpeedLevel]);
+        santaWorthLevelRef.current = santaWorthLevel;
+    }, [autoClickerLevel, spawnSpeedLevel, santaWorthLevel]);
     
     const loadUserUpgrades = async () => {
         if (!currentUser) return;
@@ -120,9 +125,11 @@ export default function Snow({
                 const userData = userDoc.data();
                 const autoLevel = userData.autoClickerLevel || 0;
                 const spawnLevel = userData.spawnSpeedLevel || 0;
+                const worthLevel = userData.santaWorthLevel || 0;
                 setAutoClickerLevel(autoLevel);
                 setSpawnSpeedLevel(spawnLevel);
-                console.log('Loaded upgrades:', { autoLevel, spawnLevel });
+                setSantaWorthLevel(worthLevel);
+                console.log('Loaded upgrades:', { autoLevel, spawnLevel, worthLevel });
             }
         } catch (error) {
             console.error("Error loading upgrades:", error);
@@ -278,7 +285,9 @@ export default function Snow({
             const h = canvas.height / dprRef.current;
             const dir: 1 | -1 = Math.random() > 0.5 ? 1 : -1;
             const startX = dir === 1 ? -60 : w + 60;
-            const y = h * ( Math.random() ); // high across the sky
+            // Spawn below navbar (avoid top 100px to account for navbar height)
+            const minY = 100; // Minimum Y position to avoid navbar
+            const y = minY + (h - minY) * Math.random();
             const scale = 0.6 + Math.random() * 0.8;
             const baseW = 120;
             const baseH = 60;
@@ -347,12 +356,20 @@ export default function Snow({
                     // Increment santa count for logged-in user
                     if (user) {
                         console.log('User is logged in, incrementing santa count for:', user);
+                        // Get the santa worth multiplier (default 1 if no upgrades)
+                        const worthMultiplier = santaWorthLevelRef.current + 1;
+                        console.log('Santa worth multiplier:', worthMultiplier);
+                        
                         try {
                             const userDocRef = doc(db, "Users", user);
                             updateDoc(userDocRef, {
-                                santasPopped: increment(1)
+                                santasPopped: increment(worthMultiplier)
                             }).then(() => {
-                                console.log(`Santa popped! Count incremented for ${user}`);
+                                console.log(`Santa popped! Count incremented by ${worthMultiplier} for ${user}`);
+                                // Dispatch custom event to notify other components
+                                window.dispatchEvent(new CustomEvent('santaPopped', { 
+                                    detail: { increment: worthMultiplier } 
+                                }));
                             }).catch((error) => {
                                 console.error("Error updating santa count:", error);
                                 showNotification(`Failed to save Santa pop. Error: ${error.message}`, "error");
@@ -406,15 +423,21 @@ export default function Snow({
                     spawnExplosion(s.x, s.y, "#4CAF50"); // Green color for auto-click
                     santas.splice(randomIndex, 1);
                     
-                    // Increment santa count
+                    // Increment santa count with worth multiplier
                     const user = currentUserRef.current;
+                    const worthMultiplier = santaWorthLevelRef.current + 1;
+                    
                     if (user) {
                         try {
                             const userDocRef = doc(db, "Users", user);
                             updateDoc(userDocRef, {
-                                santasPopped: increment(1)
+                                santasPopped: increment(worthMultiplier)
                             }).then(() => {
-                                console.log(`Auto-clicked santa for ${user}`);
+                                console.log(`Auto-clicked santa for ${user} (worth: ${worthMultiplier})`);
+                                // Dispatch custom event to notify other components
+                                window.dispatchEvent(new CustomEvent('santaPopped', { 
+                                    detail: { increment: worthMultiplier } 
+                                }));
                             }).catch((error) => {
                                 console.error("Error updating santa count:", error);
                             });
@@ -445,7 +468,7 @@ export default function Snow({
             window.removeEventListener("resize", onResize);
             window.removeEventListener("click", onClick);
         };
-    }, [particleCount, speed, size, color, autoClickerLevel, spawnSpeedLevel]);
+    }, [particleCount, speed, size, color, autoClickerLevel, spawnSpeedLevel, santaWorthLevel]);
 
     return (
         <canvas
