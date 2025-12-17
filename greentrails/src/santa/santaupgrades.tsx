@@ -7,9 +7,9 @@ import { useAuth } from '../context/AuthContext';
 import Navbar from '../componets/sadnavbar';
 import Top from '../componets/header';
 import { Cloudfooter } from '../componets/footer';
+import { showNotification } from '../componets/Notification';
 
 interface UserUpgrades {
-    coins: number;
     autoClickerLevel: number;
     spawnSpeedLevel: number;
     santasPopped: number;
@@ -18,16 +18,15 @@ interface UserUpgrades {
 const SantaUpgrades: React.FC = () => {
     const { currentUser } = useAuth();
     const [upgrades, setUpgrades] = useState<UserUpgrades>({
-        coins: 0,
         autoClickerLevel: 0,
         spawnSpeedLevel: 0,
         santasPopped: 0
     });
     const [loading, setLoading] = useState(true);
 
-    // Auto-clicker costs: 10, 25, 50, 100, 200 coins
+    // Auto-clicker costs: 10, 25, 50, 100, 200 santas
     const autoClickerCosts = [10, 25, 50, 100, 200];
-    // Spawn speed costs: 15, 30, 60, 120, 240 coins
+    // Spawn speed costs: 15, 30, 60, 120, 240 santas
     const spawnSpeedCosts = [15, 30, 60, 120, 240];
 
     useEffect(() => {
@@ -48,7 +47,6 @@ const SantaUpgrades: React.FC = () => {
             if (userDoc.exists()) {
                 const userData = userDoc.data();
                 setUpgrades({
-                    coins: userData.coins || 0,
                     autoClickerLevel: userData.autoClickerLevel || 0,
                     spawnSpeedLevel: userData.spawnSpeedLevel || 0,
                     santasPopped: userData.santasPopped || 0
@@ -63,111 +61,79 @@ const SantaUpgrades: React.FC = () => {
 
     const purchaseAutoClicker = async () => {
         if (!currentUser) {
-            alert("Please login to purchase upgrades!");
+            showNotification("Please login to purchase upgrades!", "error");
             return;
         }
 
         const level = upgrades.autoClickerLevel;
         if (level >= autoClickerCosts.length) {
-            alert("Max level reached!");
+            showNotification("Max level reached!", "info");
             return;
         }
 
         const cost = autoClickerCosts[level];
-        if (upgrades.coins < cost) {
-            alert(`Not enough coins! You need ${cost} coins but only have ${upgrades.coins}.`);
+        if (upgrades.santasPopped < cost) {
+            showNotification(`Not enough santas! You need ${cost} santas but only have ${upgrades.santasPopped}.`, "error");
             return;
         }
 
         try {
             const userDocRef = doc(db, "Users", currentUser);
             await updateDoc(userDocRef, {
-                coins: increment(-cost),
+                santasPopped: increment(-cost),
                 autoClickerLevel: increment(1)
             });
             
             // Update local state
             setUpgrades({
                 ...upgrades,
-                coins: upgrades.coins - cost,
+                santasPopped: upgrades.santasPopped - cost,
                 autoClickerLevel: upgrades.autoClickerLevel + 1
             });
             
-            alert(`Auto-clicker upgraded to level ${level + 1}!`);
+            showNotification(`Auto-clicker upgraded to level ${level + 1}!`, "success");
         } catch (error) {
             console.error("Error purchasing upgrade:", error);
-            alert("Failed to purchase upgrade. Please try again.");
+            showNotification("Failed to purchase upgrade. Please try again.", "error");
         }
     };
 
     const purchaseSpawnSpeed = async () => {
         if (!currentUser) {
-            alert("Please login to purchase upgrades!");
+            showNotification("Please login to purchase upgrades!", "error");
             return;
         }
 
         const level = upgrades.spawnSpeedLevel;
         if (level >= spawnSpeedCosts.length) {
-            alert("Max level reached!");
+            showNotification("Max level reached!", "info");
             return;
         }
 
         const cost = spawnSpeedCosts[level];
-        if (upgrades.coins < cost) {
-            alert(`Not enough coins! You need ${cost} coins but only have ${upgrades.coins}.`);
+        if (upgrades.santasPopped < cost) {
+            showNotification(`Not enough santas! You need ${cost} santas but only have ${upgrades.santasPopped}.`, "error");
             return;
         }
 
         try {
             const userDocRef = doc(db, "Users", currentUser);
             await updateDoc(userDocRef, {
-                coins: increment(-cost),
+                santasPopped: increment(-cost),
                 spawnSpeedLevel: increment(1)
             });
             
             // Update local state
             setUpgrades({
                 ...upgrades,
-                coins: upgrades.coins - cost,
+                santasPopped: upgrades.santasPopped - cost,
                 spawnSpeedLevel: upgrades.spawnSpeedLevel + 1
             });
             
-            alert(`Spawn speed upgraded to level ${level + 1}!`);
+            showNotification(`Spawn speed upgraded to level ${level + 1}!`, "success");
         } catch (error) {
             console.error("Error purchasing upgrade:", error);
-            alert("Failed to purchase upgrade. Please try again.");
-        }
-    };
-
-    const convertSantasToCoins = async () => {
-        if (!currentUser) {
-            alert("Please login!");
-            return;
-        }
-
-        if (upgrades.santasPopped < 1) {
-            alert("You need at least 1 santa popped to convert to coins!");
-            return;
-        }
-
-        try {
-            const userDocRef = doc(db, "Users", currentUser);
-            const coinsToAdd = upgrades.santasPopped;
-            
-            await updateDoc(userDocRef, {
-                coins: increment(coinsToAdd)
-            });
-            
-            // Update local state
-            setUpgrades({
-                ...upgrades,
-                coins: upgrades.coins + coinsToAdd
-            });
-            
-            alert(`Converted ${coinsToAdd} santa pops to ${coinsToAdd} coins!`);
-        } catch (error) {
-            console.error("Error converting santas:", error);
-            alert("Failed to convert. Please try again.");
+            showNotification("Failed to purchase upgrade. Please try again.", "error");
         }
     };
 
@@ -234,31 +200,11 @@ const SantaUpgrades: React.FC = () => {
                     boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                 }}>
                     <h3 style={{ color: '#2d5a3d', marginBottom: '15px' }}>Your Stats</h3>
-                    <div style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap' }}>
                         <div style={{ margin: '10px' }}>
-                            <p style={{ fontSize: '18px', marginBottom: '5px' }}>💰 Coins:</p>
-                            <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#FFD700' }}>{upgrades.coins}</p>
-                        </div>
-                        <div style={{ margin: '10px' }}>
-                            <p style={{ fontSize: '18px', marginBottom: '5px' }}>🎅 Santas Popped:</p>
+                            <p style={{ fontSize: '18px', marginBottom: '5px' }}>🎅 Santas Available:</p>
                             <p style={{ fontSize: '28px', fontWeight: 'bold', color: '#d32f2f' }}>{upgrades.santasPopped}</p>
                         </div>
-                    </div>
-                    <div style={{ textAlign: 'center', marginTop: '15px' }}>
-                        <button 
-                            onClick={convertSantasToCoins}
-                            style={{
-                                padding: '10px 20px',
-                                fontSize: '16px',
-                                backgroundColor: '#4CAF50',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '4px',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            💱 Get Coins (1 Santa = 1 Coin)
-                        </button>
                     </div>
                 </div>
 
@@ -291,19 +237,19 @@ const SantaUpgrades: React.FC = () => {
                         {upgrades.autoClickerLevel < autoClickerCosts.length ? (
                             <>
                                 <p style={{ fontSize: '18px', marginBottom: '15px' }}>
-                                    Next level cost: <strong style={{ color: '#FFD700' }}>{autoClickerCosts[upgrades.autoClickerLevel]} coins</strong>
+                                    Next level cost: <strong style={{ color: '#d32f2f' }}>{autoClickerCosts[upgrades.autoClickerLevel]} santas</strong>
                                 </p>
                                 <button 
                                     onClick={purchaseAutoClicker}
-                                    disabled={upgrades.coins < autoClickerCosts[upgrades.autoClickerLevel]}
+                                    disabled={upgrades.santasPopped < autoClickerCosts[upgrades.autoClickerLevel]}
                                     style={{
                                         padding: '10px 20px',
                                         fontSize: '16px',
-                                        backgroundColor: upgrades.coins >= autoClickerCosts[upgrades.autoClickerLevel] ? '#4CAF50' : '#ccc',
+                                        backgroundColor: upgrades.santasPopped >= autoClickerCosts[upgrades.autoClickerLevel] ? '#4CAF50' : '#ccc',
                                         color: 'white',
                                         border: 'none',
                                         borderRadius: '4px',
-                                        cursor: upgrades.coins >= autoClickerCosts[upgrades.autoClickerLevel] ? 'pointer' : 'not-allowed',
+                                        cursor: upgrades.santasPopped >= autoClickerCosts[upgrades.autoClickerLevel] ? 'pointer' : 'not-allowed',
                                         width: '100%'
                                     }}
                                 >
@@ -338,19 +284,19 @@ const SantaUpgrades: React.FC = () => {
                         {upgrades.spawnSpeedLevel < spawnSpeedCosts.length ? (
                             <>
                                 <p style={{ fontSize: '18px', marginBottom: '15px' }}>
-                                    Next level cost: <strong style={{ color: '#FFD700' }}>{spawnSpeedCosts[upgrades.spawnSpeedLevel]} coins</strong>
+                                    Next level cost: <strong style={{ color: '#d32f2f' }}>{spawnSpeedCosts[upgrades.spawnSpeedLevel]} santas</strong>
                                 </p>
                                 <button 
                                     onClick={purchaseSpawnSpeed}
-                                    disabled={upgrades.coins < spawnSpeedCosts[upgrades.spawnSpeedLevel]}
+                                    disabled={upgrades.santasPopped < spawnSpeedCosts[upgrades.spawnSpeedLevel]}
                                     style={{
                                         padding: '10px 20px',
                                         fontSize: '16px',
-                                        backgroundColor: upgrades.coins >= spawnSpeedCosts[upgrades.spawnSpeedLevel] ? '#2196F3' : '#ccc',
+                                        backgroundColor: upgrades.santasPopped >= spawnSpeedCosts[upgrades.spawnSpeedLevel] ? '#2196F3' : '#ccc',
                                         color: 'white',
                                         border: 'none',
                                         borderRadius: '4px',
-                                        cursor: upgrades.coins >= spawnSpeedCosts[upgrades.spawnSpeedLevel] ? 'pointer' : 'not-allowed',
+                                        cursor: upgrades.santasPopped >= spawnSpeedCosts[upgrades.spawnSpeedLevel] ? 'pointer' : 'not-allowed',
                                         width: '100%'
                                     }}
                                 >
@@ -374,8 +320,7 @@ const SantaUpgrades: React.FC = () => {
                     <h3 style={{ color: '#2d5a3d', marginBottom: '15px' }}>ℹ️ How to Play</h3>
                     <ol style={{ lineHeight: '1.8', color: '#666' }}>
                         <li>Click flying Santas anywhere on the site to pop them and earn points!</li>
-                        <li>Convert your Santa pops to coins using the button above</li>
-                        <li>Purchase upgrades to pop more Santas automatically</li>
+                        <li>Spend your popped Santas directly on upgrades</li>
                         <li>Auto-clicker will work on ALL pages across the site</li>
                         <li>Spawn speed increases how often Santas appear</li>
                     </ol>

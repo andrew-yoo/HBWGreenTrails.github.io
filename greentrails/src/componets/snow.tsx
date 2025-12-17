@@ -3,6 +3,7 @@ import santaSVG from "./santa.tsx";
 import { useAuth } from "../context/AuthContext";
 import { db } from "../base/firebaseConfig";
 import { doc, updateDoc, increment, getDoc } from "firebase/firestore";
+import { showNotification } from "./Notification";
 
 type SnowProps = {
     particleCount?: number;
@@ -354,16 +355,16 @@ export default function Snow({
                                 console.log(`Santa popped! Count incremented for ${user}`);
                             }).catch((error) => {
                                 console.error("Error updating santa count:", error);
-                                alert(`Failed to save Santa pop. Error: ${error.message}`);
+                                showNotification(`Failed to save Santa pop. Error: ${error.message}`, "error");
                             });
                         } catch (error) {
                             console.error("Error creating update:", error);
                         }
                     } else {
                         console.log("No user logged in - santa pop not tracked");
-                        // Show a one-time alert to inform user they need to login
+                        // Show a one-time notification to inform user they need to login
                         if (!sessionStorage.getItem('loginReminderShown')) {
-                            alert('🎅 Login required! Go to the Sign Up page to login or create an account, then your Santa pops will be tracked on the leaderboard!');
+                            showNotification('🎅 Login required! Go to the Sign Up page to login or create an account, then your Santa pops will be tracked on the leaderboard!', "info");
                             sessionStorage.setItem('loginReminderShown', 'true');
                         }
                     }

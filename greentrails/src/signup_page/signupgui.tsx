@@ -9,6 +9,7 @@ import { getFirestore } from "firebase/firestore";
 import { Button, Container } from 'react-bootstrap';
 import { addDoc, setDoc } from "firebase/firestore";
 import { useAuth } from '../context/AuthContext';
+import { showNotification } from '../componets/Notification';
 
 
     const Signupgui: React.FC = () => {
@@ -39,7 +40,7 @@ import { useAuth } from '../context/AuthContext';
             const Name = nameInput.trim();
             
             if (Name === "") {
-                alert("Name cannot be empty. Please enter a valid name.");
+                showNotification("Name cannot be empty. Please enter a valid name.", "error");
                 return;
             }
             
@@ -58,7 +59,7 @@ import { useAuth } from '../context/AuthContext';
 
                     checkIdExists(Name).then((exists) => {
                         if (exists) {
-                            alert("name already in use. Please choose a different name.");
+                            showNotification("Name already in use. Please choose a different name.", "error");
                             return;
                         } else {
                             // Store name as-is but check will be case-insensitive
@@ -68,11 +69,10 @@ import { useAuth } from '../context/AuthContext';
                                 score: 0, 
                                 santasPopped: 0, 
                                 isAdmin: false,
-                                coins: 0,
                                 autoClickerLevel: 0,
                                 spawnSpeedLevel: 0
                             }).then(() => {
-                                alert("User created successfully! You are now logged in.");
+                                showNotification("User created successfully! You are now logged in.", "success");
                                 login(Name, false);
                                 // Refresh the username list
                                 setAllUserNames([...allUserNames, Name].sort());
@@ -89,7 +89,7 @@ import { useAuth } from '../context/AuthContext';
             Name = Name.trim();
             
             if (Name === "") {
-                alert("Name cannot be empty. Please select or enter a valid name.");
+                showNotification("Name cannot be empty. Please select or enter a valid name.", "error");
                 return;
             }
 
@@ -118,16 +118,13 @@ import { useAuth } from '../context/AuthContext';
                 if (userDoc.exists()) {
                     const userData = userDoc.data();
                     
-                    // Initialize missing fields including new upgrade fields
+                    // Initialize missing fields including new upgrade fields (but not coins)
                     const updates: any = {};
                     if (userData && userData.santasPopped === undefined) {
                         updates.santasPopped = 0;
                     }
                     if (userData && userData.isAdmin === undefined) {
                         updates.isAdmin = false;
-                    }
-                    if (userData && userData.coins === undefined) {
-                        updates.coins = 0;
                     }
                     if (userData && userData.autoClickerLevel === undefined) {
                         updates.autoClickerLevel = 0;
@@ -142,13 +139,13 @@ import { useAuth } from '../context/AuthContext';
                     // Login with admin status
                     const isAdmin = userData?.isAdmin || false;
                     login(Name, isAdmin);
-                    alert(`Welcome back, ${Name}!`);
+                    showNotification(`Welcome back, ${Name}!`, "success");
                 } else {
-                    alert("User not found. Please sign up first.");
+                    showNotification("User not found. Please sign up first.", "error");
                 }
             } catch (error) {
                 console.error("Error logging in:", error);
-                alert("Error logging in. Please try again.");
+                showNotification("Error logging in. Please try again.", "error");
             }
         }
 

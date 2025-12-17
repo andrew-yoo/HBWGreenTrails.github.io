@@ -11,6 +11,7 @@ import Icon from './componets/icon'
 import Snow from './componets/snow';
 import TabAlarm from './componets/tabAlarm';
 import { AuthProvider } from './context/AuthContext';
+import { NotificationContainer } from './componets/Notification';
 
 const App: React.FC = () => {
     return (
@@ -19,6 +20,7 @@ const App: React.FC = () => {
                 <Icon />
                 <Snow />
                 <TabAlarm />
+                <NotificationContainer />
                 <Router>
                     <Routes>
                         {/* Redirect any unknown path to homepage */}
