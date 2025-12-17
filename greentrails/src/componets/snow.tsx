@@ -33,6 +33,7 @@ type Santa = {
     w: number;
     h: number;
     bob: number;
+    isGolden?: boolean; // for Gold Rush upgrade
 };
 
 type ExpParticle = {
@@ -62,6 +63,13 @@ export default function Snow({
     const SPAWN_SPEED_REDUCTION_FACTOR = 0.8; // 20% reduction per level
     const MIN_SPAWN_INTERVAL = 1000; // 1 second minimum
     
+    // Constants for upgrade mechanics
+    const GOLD_RUSH_CHANCE_PER_LEVEL = 0.03; // 3% per level
+    const GOLDEN_SANTA_MULTIPLIER = 5; // Golden santas worth 5x
+    const LUCKY_CLICK_CHANCE_PER_LEVEL = 0.05; // 5% per level
+    const LUCKY_CLICK_MULTIPLIER = 2; // Lucky clicks worth 2x
+    const CLICK_MULTIPLIER_PER_LEVEL = 0.1; // 10% per level (1 + level * 0.1)
+    
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const rafRef = useRef<number | null>(null);
     const particlesRef = useRef<Particle[]>([]);
@@ -85,9 +93,15 @@ export default function Snow({
     const [autoClickerLevel, setAutoClickerLevel] = useState(0);
     const [spawnSpeedLevel, setSpawnSpeedLevel] = useState(0);
     const [santaWorthLevel, setSantaWorthLevel] = useState(0);
+    const [luckyClickLevel, setLuckyClickLevel] = useState(0);
+    const [goldRushLevel, setGoldRushLevel] = useState(0);
+    const [clickMultiplierLevel, setClickMultiplierLevel] = useState(0);
     const autoClickerLevelRef = useRef(0);
     const spawnSpeedLevelRef = useRef(0);
     const santaWorthLevelRef = useRef(0);
+    const luckyClickLevelRef = useRef(0);
+    const goldRushLevelRef = useRef(0);
+    const clickMultiplierLevelRef = useRef(0);
     
     // Update ref whenever currentUser changes
     useEffect(() => {
@@ -101,9 +115,15 @@ export default function Snow({
             setAutoClickerLevel(0);
             setSpawnSpeedLevel(0);
             setSantaWorthLevel(0);
+            setLuckyClickLevel(0);
+            setGoldRushLevel(0);
+            setClickMultiplierLevel(0);
             autoClickerLevelRef.current = 0;
             spawnSpeedLevelRef.current = 0;
             santaWorthLevelRef.current = 0;
+            luckyClickLevelRef.current = 0;
+            goldRushLevelRef.current = 0;
+            clickMultiplierLevelRef.current = 0;
         }
     }, [currentUser]);
     
@@ -112,7 +132,10 @@ export default function Snow({
         autoClickerLevelRef.current = autoClickerLevel;
         spawnSpeedLevelRef.current = spawnSpeedLevel;
         santaWorthLevelRef.current = santaWorthLevel;
-    }, [autoClickerLevel, spawnSpeedLevel, santaWorthLevel]);
+        luckyClickLevelRef.current = luckyClickLevel;
+        goldRushLevelRef.current = goldRushLevel;
+        clickMultiplierLevelRef.current = clickMultiplierLevel;
+    }, [autoClickerLevel, spawnSpeedLevel, santaWorthLevel, luckyClickLevel, goldRushLevel, clickMultiplierLevel]);
     
     const loadUserUpgrades = async () => {
         if (!currentUser) return;
@@ -126,14 +149,51 @@ export default function Snow({
                 const autoLevel = userData.autoClickerLevel || 0;
                 const spawnLevel = userData.spawnSpeedLevel || 0;
                 const worthLevel = userData.santaWorthLevel || 0;
+                const luckyLevel = userData.luckyClickLevel || 0;
+                const goldLevel = userData.goldRushLevel || 0;
+                const multiplierLevel = userData.clickMultiplierLevel || 0;
                 setAutoClickerLevel(autoLevel);
                 setSpawnSpeedLevel(spawnLevel);
                 setSantaWorthLevel(worthLevel);
-                console.log('Loaded upgrades:', { autoLevel, spawnLevel, worthLevel });
+                setLuckyClickLevel(luckyLevel);
+                setGoldRushLevel(goldLevel);
+                setClickMultiplierLevel(multiplierLevel);
+                console.log('Loaded upgrades:', { 
+                    autoLevel, 
+                    spawnLevel, 
+                    worthLevel,
+                    luckyLevel,
+                    goldLevel,
+                    multiplierLevel
+                });
             }
         } catch (error) {
             console.error("Error loading upgrades:", error);
         }
+    };
+
+    // Helper function to calculate points with all upgrade bonuses applied
+    const calculateUpgradePoints = (basePoints: number, isGolden: boolean): { points: number, isLucky: boolean } => {
+        let points = basePoints;
+        let isLucky = false;
+        
+        // Gold Rush: Golden santas are worth 5x
+        if (isGolden) {
+            points *= GOLDEN_SANTA_MULTIPLIER;
+        }
+        
+        // Lucky Click: Chance per level for double points
+        const luckyChance = luckyClickLevelRef.current * LUCKY_CLICK_CHANCE_PER_LEVEL;
+        if (Math.random() < luckyChance) {
+            points *= LUCKY_CLICK_MULTIPLIER;
+            isLucky = true;
+        }
+        
+        // Click Multiplier: Applies (1 + level * factor)x multiplier to all clicks
+        const clickMultiplier = 1 + (clickMultiplierLevelRef.current * CLICK_MULTIPLIER_PER_LEVEL);
+        points = Math.round(points * clickMultiplier);
+        
+        return { points, isLucky };
     };
 
     useEffect(() => {
@@ -235,12 +295,29 @@ export default function Snow({
                     if (s.dir === -1) {
                         ctx.scale(-1, 1);
                     }
+                    
+                    // Apply golden filter for golden santas
+                    if (s.isGolden) {
+                        // Add a golden glow effect
+                        ctx.shadowColor = "#FFD700";
+                        ctx.shadowBlur = 20;
+                        ctx.globalAlpha = 1;
+                        // Tint the santa golden
+                        ctx.filter = "sepia(1) saturate(3) hue-rotate(10deg) brightness(1.3)";
+                    }
+                    
                     // draw centred
                     ctx.drawImage(santaImageRef.current, -s.w / 2, -s.h / 2, s.w, s.h);
+                    
+                    // Reset filter and shadow
+                    ctx.filter = "none";
+                    ctx.shadowColor = "transparent";
+                    ctx.shadowBlur = 0;
+                    
                     ctx.restore();
                 } else {
-                    // fallback: simple red rectangle if image not ready
-                    ctx.fillStyle = "#e74c3c";
+                    // fallback: simple rectangle if image not ready
+                    ctx.fillStyle = s.isGolden ? "#FFD700" : "#e74c3c";
                     ctx.fillRect(drawX - (s.w / 2), drawY - (s.h / 2), s.w, s.h);
                 }
 
@@ -293,6 +370,11 @@ export default function Snow({
             const baseH = 60;
             // velocity in logical px per frame (normalized dt). Adjust with speed prop.
             const vx = (2 + Math.random() * 2) * (dir === 1 ? 1 : -1) * Math.max(0.5, speed);
+            
+            // Gold Rush: Determine if this santa should be golden
+            const goldRushChance = goldRushLevelRef.current * GOLD_RUSH_CHANCE_PER_LEVEL;
+            const isGolden = Math.random() < goldRushChance;
+            
             const santa: Santa = {
                 x: startX,
                 y,
@@ -301,6 +383,7 @@ export default function Snow({
                 dir,
                 w: baseW * scale,
                 h: baseH * scale,
+                isGolden,
             };
             santaSpritesRef.current.push(santa);
         };
@@ -349,26 +432,44 @@ export default function Snow({
                 const dy = y - s.y;
                 const r = Math.max(s.w, s.h) * 0.6; // hit radius
                 if (dx * dx + dy * dy <= r * r) {
-                    // spawn explosion using santa's position and remove santa
-                    spawnExplosion(s.x, s.y, "#ffb347"); // warm color
+                    // spawn explosion using santa's position and color based on type
+                    const explosionColor = s.isGolden ? "#FFD700" : "#ffb347";
+                    spawnExplosion(s.x, s.y, explosionColor);
                     santas.splice(i, 1);
                     
                     // Increment santa count for logged-in user
                     if (user) {
                         console.log('User is logged in, incrementing santa count for:', user);
-                        // Get the santa worth multiplier (default 1 if no upgrades)
-                        const worthMultiplier = santaWorthLevelRef.current + 1;
-                        console.log('Santa worth multiplier:', worthMultiplier);
+                        
+                        // Calculate points for this santa pop using helper function
+                        // Base worth is (santaWorthLevel + 1), so level 0 = 1 point, level 1 = 2 points, etc.
+                        const basePoints = santaWorthLevelRef.current + 1;
+                        const { points, isLucky } = calculateUpgradePoints(basePoints, s.isGolden);
+                        
+                        // Show visual feedback
+                        if (s.isGolden) {
+                            console.log('Golden santa clicked! 5x multiplier applied');
+                        }
+                        if (isLucky) {
+                            console.log('Lucky click! 2x multiplier applied');
+                            showNotification('🍀 Lucky Click! Double points!', 'success');
+                        }
+                        
+                        console.log('Total points for this click:', points, {
+                            baseWorth: basePoints,
+                            isGolden: s.isGolden,
+                            isLucky
+                        });
                         
                         try {
                             const userDocRef = doc(db, "Users", user);
                             updateDoc(userDocRef, {
-                                santasPopped: increment(worthMultiplier)
+                                santasPopped: increment(points)
                             }).then(() => {
-                                console.log(`Santa popped! Count incremented by ${worthMultiplier} for ${user}`);
+                                console.log(`Santa popped! Count incremented by ${points} for ${user}`);
                                 // Dispatch custom event to notify other components
                                 window.dispatchEvent(new CustomEvent('santaPopped', { 
-                                    detail: { increment: worthMultiplier } 
+                                    detail: { increment: points } 
                                 }));
                             }).catch((error) => {
                                 console.error("Error updating santa count:", error);
@@ -420,23 +521,26 @@ export default function Snow({
                     const s = santas[randomIndex];
                     
                     // Spawn explosion and remove santa
-                    spawnExplosion(s.x, s.y, "#4CAF50"); // Green color for auto-click
+                    const explosionColor = s.isGolden ? "#FFD700" : "#4CAF50";
+                    spawnExplosion(s.x, s.y, explosionColor); // Green for auto-click, gold for golden
                     santas.splice(randomIndex, 1);
                     
-                    // Increment santa count with worth multiplier
+                    // Calculate points for auto-clicked santa using helper function
                     const user = currentUserRef.current;
-                    const worthMultiplier = santaWorthLevelRef.current + 1;
+                    // Base worth is (santaWorthLevel + 1), so level 0 = 1 point, level 1 = 2 points, etc.
+                    const basePoints = santaWorthLevelRef.current + 1;
+                    const { points } = calculateUpgradePoints(basePoints, s.isGolden);
                     
                     if (user) {
                         try {
                             const userDocRef = doc(db, "Users", user);
                             updateDoc(userDocRef, {
-                                santasPopped: increment(worthMultiplier)
+                                santasPopped: increment(points)
                             }).then(() => {
-                                console.log(`Auto-clicked santa for ${user} (worth: ${worthMultiplier})`);
+                                console.log(`Auto-clicked santa for ${user} (worth: ${points})`);
                                 // Dispatch custom event to notify other components
                                 window.dispatchEvent(new CustomEvent('santaPopped', { 
-                                    detail: { increment: worthMultiplier } 
+                                    detail: { increment: points } 
                                 }));
                             }).catch((error) => {
                                 console.error("Error updating santa count:", error);
@@ -468,7 +572,7 @@ export default function Snow({
             window.removeEventListener("resize", onResize);
             window.removeEventListener("click", onClick);
         };
-    }, [particleCount, speed, size, color, autoClickerLevel, spawnSpeedLevel, santaWorthLevel]);
+    }, [particleCount, speed, size, color, autoClickerLevel, spawnSpeedLevel, santaWorthLevel, luckyClickLevel, goldRushLevel, clickMultiplierLevel]);
 
     return (
         <canvas
