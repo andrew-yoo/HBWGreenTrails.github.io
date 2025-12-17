@@ -42,7 +42,7 @@ const SantaUpgrades: React.FC = () => {
         
         // Listen for santa pop events to update count in real-time
         const handleSantaPopped = (event: Event) => {
-            const customEvent = event as CustomEvent;
+            const customEvent = event as CustomEvent<{ increment: number }>;
             const increment = customEvent.detail?.increment || 1;
             setUpgrades(prev => ({
                 ...prev,
@@ -376,12 +376,20 @@ const SantaUpgrades: React.FC = () => {
                                         transition: 'all 0.3s',
                                         boxShadow: upgrades.santasPopped >= autoClickerCosts[upgrades.autoClickerLevel] ? '0 4px 8px rgba(76, 175, 80, 0.3)' : 'none'
                                     }}
-                                    onMouseOver={(e) => {
+                                    onMouseEnter={(e) => {
                                         if (upgrades.santasPopped >= autoClickerCosts[upgrades.autoClickerLevel]) {
                                             e.currentTarget.style.transform = 'scale(1.05)';
                                         }
                                     }}
-                                    onMouseOut={(e) => {
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.transform = 'scale(1)';
+                                    }}
+                                    onFocus={(e) => {
+                                        if (upgrades.santasPopped >= autoClickerCosts[upgrades.autoClickerLevel]) {
+                                            e.currentTarget.style.transform = 'scale(1.05)';
+                                        }
+                                    }}
+                                    onBlur={(e) => {
                                         e.currentTarget.style.transform = 'scale(1)';
                                     }}
                                 >
@@ -460,12 +468,20 @@ const SantaUpgrades: React.FC = () => {
                                         transition: 'all 0.3s',
                                         boxShadow: upgrades.santasPopped >= spawnSpeedCosts[upgrades.spawnSpeedLevel] ? '0 4px 8px rgba(33, 150, 243, 0.3)' : 'none'
                                     }}
-                                    onMouseOver={(e) => {
+                                    onMouseEnter={(e) => {
                                         if (upgrades.santasPopped >= spawnSpeedCosts[upgrades.spawnSpeedLevel]) {
                                             e.currentTarget.style.transform = 'scale(1.05)';
                                         }
                                     }}
-                                    onMouseOut={(e) => {
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.transform = 'scale(1)';
+                                    }}
+                                    onFocus={(e) => {
+                                        if (upgrades.santasPopped >= spawnSpeedCosts[upgrades.spawnSpeedLevel]) {
+                                            e.currentTarget.style.transform = 'scale(1.05)';
+                                        }
+                                    }}
+                                    onBlur={(e) => {
                                         e.currentTarget.style.transform = 'scale(1)';
                                     }}
                                 >
@@ -544,12 +560,20 @@ const SantaUpgrades: React.FC = () => {
                                         transition: 'all 0.3s',
                                         boxShadow: upgrades.santasPopped >= santaWorthCosts[upgrades.santaWorthLevel] ? '0 4px 8px rgba(255, 152, 0, 0.3)' : 'none'
                                     }}
-                                    onMouseOver={(e) => {
+                                    onMouseEnter={(e) => {
                                         if (upgrades.santasPopped >= santaWorthCosts[upgrades.santaWorthLevel]) {
                                             e.currentTarget.style.transform = 'scale(1.05)';
                                         }
                                     }}
-                                    onMouseOut={(e) => {
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.transform = 'scale(1)';
+                                    }}
+                                    onFocus={(e) => {
+                                        if (upgrades.santasPopped >= santaWorthCosts[upgrades.santaWorthLevel]) {
+                                            e.currentTarget.style.transform = 'scale(1.05)';
+                                        }
+                                    }}
+                                    onBlur={(e) => {
                                         e.currentTarget.style.transform = 'scale(1)';
                                     }}
                                 >
