@@ -10,9 +10,7 @@ import FlowerCanvas from './flowers';
                 <div id='tree2'><Tree /></div>
                 
                 <footer>
-                    <FlowerCanvas>
                     <div id='road'></div>
-                     </FlowerCanvas>
                 </footer>
                
             </div>
