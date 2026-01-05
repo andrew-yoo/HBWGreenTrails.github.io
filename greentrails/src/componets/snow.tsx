@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import santaSVG from "./santa.tsx";
+import fireworkSVG from "./firework.tsx";
 import { useAuth } from "../context/AuthContext";
 import { db } from "../base/firebaseConfig";
 import { doc, updateDoc, increment, getDoc } from "firebase/firestore";
@@ -24,7 +24,7 @@ type Particle = {
     phase: number; // swing phase
 };
 
-type Santa = {
+type Firework = {
     x: number;
     y: number;
     vx: number;
@@ -51,7 +51,7 @@ export default function Snow({
     particleCount = 120,
     speed = 1,
     size = 3,
-    color = "#FFF",
+    color = "#FFD700", // Changed to gold for New Year's confetti
     zIndex = 9999,
 }: SnowProps) {
     // Constants for auto-clicker and spawn speed calculations
@@ -65,7 +65,7 @@ export default function Snow({
     
     // Constants for upgrade mechanics
     const GOLD_RUSH_CHANCE_PER_LEVEL = 0.03; // 3% per level
-    const GOLDEN_SANTA_MULTIPLIER = 5; // Golden santas worth 5x
+    const GOLDEN_SANTA_MULTIPLIER = 5; // Golden fireworks worth 5x
     const LUCKY_CLICK_CHANCE_PER_LEVEL = 0.05; // 5% per level
     const LUCKY_CLICK_MULTIPLIER = 2; // Lucky clicks worth 2x
     const CLICK_MULTIPLIER_PER_LEVEL = 0.1; // 10% per level (1 + level * 0.1)
@@ -75,8 +75,8 @@ export default function Snow({
     const particlesRef = useRef<Particle[]>([]);
     const dprRef = useRef<number>(1);
 
-    const santaImageRef = useRef<HTMLImageElement | null>(null);
-    const santaSpritesRef = useRef<Santa[]>([]);
+    const fireworkImageRef = useRef<HTMLImageElement | null>(null);
+    const fireworkSpritesRef = useRef<Firework[]>([]);
     const spawnIntervalRef = useRef<number | null>(null);
     const autoClickerIntervalRef = useRef<number | null>(null);
 
@@ -177,7 +177,7 @@ export default function Snow({
         let points = basePoints;
         let isLucky = false;
         
-        // Gold Rush: Golden santas are worth 5x
+        // Gold Rush: Golden fireworks are worth 5x
         if (isGolden) {
             points *= GOLDEN_SANTA_MULTIPLIER;
         }
@@ -203,10 +203,10 @@ export default function Snow({
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
 
-        // small inline SVG Santa to avoid external assets
-        const santaImg = new Image();
-        santaImg.src = `data:image/svg+xml;charset=utf-8,${santaSVG}`;
-        santaImageRef.current = santaImg;
+        // small inline SVG Firework to avoid external assets
+        const fireworkImg = new Image();
+        fireworkImg.src = `data:image/svg+xml;charset=utf-8,${fireworkSVG}`;
+        fireworkImageRef.current = fireworkImg;
 
         const setSize = () => {
             const dpr = window.devicePixelRatio || 1;
@@ -225,6 +225,8 @@ export default function Snow({
             const w = canvas.width / dprRef.current;
             const h = canvas.height / dprRef.current;
             const parts: Particle[] = [];
+            // New Year's confetti colors
+            const confettiColors = ['#FFD700', '#87CEEB', '#FFA500', '#FF69B4', '#00FF00', '#FF0000'];
             for (let i = 0; i < particleCount; i++) {
                 const r = Math.random() * size + Math.random() * (size / 2);
                 parts.push({
@@ -251,7 +253,8 @@ export default function Snow({
 
             ctx.clearRect(0, 0, w, h);
 
-            // draw snow particles
+            // draw confetti particles with rotating colors
+            const confettiColors = ['#FFD700', '#87CEEB', '#FFA500', '#FF69B4', '#00FF00', '#FF0000', '#FFFFFF'];
             const parts = particlesRef.current;
             for (let i = 0; i < parts.length; i++) {
                 const p = parts[i];
@@ -268,8 +271,10 @@ export default function Snow({
                 if (p.x + p.r < 0) p.x = w + p.r;
 
                 ctx.globalAlpha = p.o;
+                // Use confetti colors instead of white
+                const confettiColor = confettiColors[i % confettiColors.length];
                 const grd = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 1.8);
-                grd.addColorStop(0, color);
+                grd.addColorStop(0, confettiColor);
                 grd.addColorStop(1, "rgba(255,255,255,0)");
                 ctx.fillStyle = grd;
                 ctx.beginPath();
@@ -279,35 +284,35 @@ export default function Snow({
 
             ctx.globalAlpha = 1;
 
-            // draw santas
-            const santas = santaSpritesRef.current;
-            for (let i = santas.length - 1; i >= 0; i--) {
-                const s = santas[i];
+            // draw fireworks
+            const fireworks = fireworkSpritesRef.current;
+            for (let i = fireworks.length - 1; i >= 0; i--) {
+                const s = fireworks[i];
                 s.x += s.vx * dt;
                 // small bobbing
                 const bob = Math.sin((time / 400) + s.x * 0.02) * 6 * s.scale;
                 const drawX = s.x;
                 const drawY = s.y + bob;
 
-                if (santaImageRef.current && santaImageRef.current.complete) {
+                if (fireworkImageRef.current && fireworkImageRef.current.complete) {
                     ctx.save();
                     ctx.translate(drawX, drawY);
                     if (s.dir === -1) {
                         ctx.scale(-1, 1);
                     }
                     
-                    // Apply golden filter for golden santas
+                    // Apply golden filter for golden fireworks
                     if (s.isGolden) {
                         // Add a golden glow effect
                         ctx.shadowColor = "#FFD700";
                         ctx.shadowBlur = 20;
                         ctx.globalAlpha = 1;
-                        // Tint the santa golden
+                        // Tint the firework golden
                         ctx.filter = "sepia(1) saturate(3) hue-rotate(10deg) brightness(1.3)";
                     }
                     
                     // draw centred
-                    ctx.drawImage(santaImageRef.current, -s.w / 2, -s.h / 2, s.w, s.h);
+                    ctx.drawImage(fireworkImageRef.current, -s.w / 2, -s.h / 2, s.w, s.h);
                     
                     // Reset filter and shadow
                     ctx.filter = "none";
@@ -317,13 +322,13 @@ export default function Snow({
                     ctx.restore();
                 } else {
                     // fallback: simple rectangle if image not ready
-                    ctx.fillStyle = s.isGolden ? "#FFD700" : "#e74c3c";
+                    ctx.fillStyle = s.isGolden ? "#FFD700" : "#87CEEB";
                     ctx.fillRect(drawX - (s.w / 2), drawY - (s.h / 2), s.w, s.h);
                 }
 
                 // remove when offscreen beyond margin
-                if (s.dir === 1 && s.x - s.w / 2 > w + 50) santas.splice(i, 1);
-                if (s.dir === -1 && s.x + s.w / 2 < -50) santas.splice(i, 1);
+                if (s.dir === 1 && s.x - s.w / 2 > w + 50) fireworks.splice(i, 1);
+                if (s.dir === -1 && s.x + s.w / 2 < -50) fireworks.splice(i, 1);
             }
 
             // update & draw explosions
@@ -356,8 +361,8 @@ export default function Snow({
             rafRef.current = requestAnimationFrame(render);
         };
 
-        // spawn a santa sprite occasionally
-        const spawnSanta = () => {
+        // spawn a firework sprite occasionally
+        const spawnFirework = () => {
             const w = canvas.width / dprRef.current;
             const h = canvas.height / dprRef.current;
             const dir: 1 | -1 = Math.random() > 0.5 ? 1 : -1;
@@ -371,11 +376,11 @@ export default function Snow({
             // velocity in logical px per frame (normalized dt). Adjust with speed prop.
             const vx = (2 + Math.random() * 2) * (dir === 1 ? 1 : -1) * Math.max(0.5, speed);
             
-            // Gold Rush: Determine if this santa should be golden
+            // Gold Rush: Determine if this firework should be golden
             const goldRushChance = goldRushLevelRef.current * GOLD_RUSH_CHANCE_PER_LEVEL;
             const isGolden = Math.random() < goldRushChance;
             
-            const santa: Santa = {
+            const firework: Firework = {
                 x: startX,
                 y,
                 vx,
@@ -385,7 +390,7 @@ export default function Snow({
                 h: baseH * scale,
                 isGolden,
             };
-            santaSpritesRef.current.push(santa);
+            fireworkSpritesRef.current.push(firework);
         };
 
         // new: spawn explosion at x,y (logical coords)
@@ -399,7 +404,7 @@ export default function Snow({
                 const vy = Math.sin(angle) * speed * (0.6 + Math.random() * 1.4) - Math.random() * 1.5;
                 const r = 1 + Math.random() * 3;
                 const life = 30 + Math.random() * 40; // frames
-                const c = colorHint || "#e74c3c";
+                const c = colorHint || "#87CEEB"; // New Year's blue instead of Christmas red
                 parts.push({
                     x,
                     y,
@@ -414,41 +419,41 @@ export default function Snow({
             explosionsRef.current.push(...parts);
         };
 
-        // click handler to explode santas
+        // click handler to explode fireworks
         const onClick = (e: MouseEvent) => {
             const rect = canvas.getBoundingClientRect();
             const x = (e.clientX - rect.left);
             const y = (e.clientY - rect.top);
-            const santas = santaSpritesRef.current;
+            const fireworks = fireworkSpritesRef.current;
             
             // Use ref to get current user value (not closure)
             const user = currentUserRef.current;
-            console.log('Santa click detected. Current user:', user);
+            console.log('Firework click detected. Current user:', user);
             
-            // iterate in reverse to remove hit santa
-            for (let i = santas.length - 1; i >= 0; i--) {
-                const s = santas[i];
+            // iterate in reverse to remove hit firework
+            for (let i = fireworks.length - 1; i >= 0; i--) {
+                const s = fireworks[i];
                 const dx = x - s.x;
                 const dy = y - s.y;
                 const r = Math.max(s.w, s.h) * 0.6; // hit radius
                 if (dx * dx + dy * dy <= r * r) {
-                    // spawn explosion using santa's position and color based on type
-                    const explosionColor = s.isGolden ? "#FFD700" : "#ffb347";
+                    // spawn explosion using firework's position and color based on type
+                    const explosionColor = s.isGolden ? "#FFD700" : "#87CEEB";
                     spawnExplosion(s.x, s.y, explosionColor);
-                    santas.splice(i, 1);
+                    fireworks.splice(i, 1);
                     
-                    // Increment santa count for logged-in user
+                    // Increment firework count for logged-in user (database field name stays as santasPopped)
                     if (user) {
-                        console.log('User is logged in, incrementing santa count for:', user);
+                        console.log('User is logged in, incrementing firework count for:', user);
                         
-                        // Calculate points for this santa pop using helper function
+                        // Calculate points for this firework pop using helper function
                         // Base worth is (santaWorthLevel + 1), so level 0 = 1 point, level 1 = 2 points, etc.
                         const basePoints = santaWorthLevelRef.current + 1;
                         const { points, isLucky } = calculateUpgradePoints(basePoints, s.isGolden);
                         
                         // Show visual feedback
                         if (s.isGolden) {
-                            console.log('Golden santa clicked! 5x multiplier applied');
+                            console.log('Golden firework clicked! 5x multiplier applied');
                         }
                         if (isLucky) {
                             console.log('Lucky click! 2x multiplier applied');
@@ -464,25 +469,25 @@ export default function Snow({
                         try {
                             const userDocRef = doc(db, "Users", user);
                             updateDoc(userDocRef, {
-                                santasPopped: increment(points)
+                                santasPopped: increment(points) // database field name stays same
                             }).then(() => {
-                                console.log(`Santa popped! Count incremented by ${points} for ${user}`);
+                                console.log(`Firework popped! Count incremented by ${points} for ${user}`);
                                 // Dispatch custom event to notify other components
                                 window.dispatchEvent(new CustomEvent('santaPopped', { 
                                     detail: { increment: points } 
                                 }));
                             }).catch((error) => {
-                                console.error("Error updating santa count:", error);
-                                showNotification(`Failed to save Santa pop. Error: ${error.message}`, "error");
+                                console.error("Error updating firework count:", error);
+                                showNotification(`Failed to save Firework pop. Error: ${error.message}`, "error");
                             });
                         } catch (error) {
                             console.error("Error creating update:", error);
                         }
                     } else {
-                        console.log("No user logged in - santa pop not tracked");
+                        console.log("No user logged in - firework pop not tracked");
                         // Show a one-time notification to inform user they need to login
                         if (!sessionStorage.getItem('loginReminderShown')) {
-                            showNotification('🎅 Login required! Go to the Sign Up page to login or create an account, then your Santa pops will be tracked on the leaderboard!', "info");
+                            showNotification('🎆 Login required! Go to the Sign Up page to login or create an account, then your Firework pops will be tracked on the leaderboard!', "info");
                             sessionStorage.setItem('loginReminderShown', 'true');
                         }
                     }
@@ -500,11 +505,11 @@ export default function Snow({
         // Base: 5000ms, each level reduces by 20% (multiply by 0.8)
         const spawnSpeed = spawnSpeedLevelRef.current;
         const spawnInterval = Math.max(MIN_SPAWN_INTERVAL, BASE_SPAWN_INTERVAL * Math.pow(SPAWN_SPEED_REDUCTION_FACTOR, spawnSpeed));
-        console.log('Santa spawn interval:', spawnInterval, 'ms (level', spawnSpeed, ')');
+        console.log('Firework spawn interval:', spawnInterval, 'ms (level', spawnSpeed, ')');
 
-        // spawn first santa after 1s, then at calculated interval
-        spawnIntervalRef.current = window.setInterval(spawnSanta, spawnInterval);
-        const firstSpawn = window.setTimeout(spawnSanta, 1000);
+        // spawn first firework after 1s, then at calculated interval
+        spawnIntervalRef.current = window.setInterval(spawnFirework, spawnInterval);
+        const firstSpawn = window.setTimeout(spawnFirework, 1000);
         
         // Auto-clicker setup
         // Only start if auto-clicker level > 0
@@ -514,18 +519,18 @@ export default function Snow({
             console.log('Auto-clicker active! Interval:', autoClickInterval, 'ms (level', autoClickerLevelRef.current, ')');
             
             autoClickerIntervalRef.current = window.setInterval(() => {
-                const santas = santaSpritesRef.current;
-                if (santas.length > 0 && currentUserRef.current) {
-                    // Auto-click a random santa
-                    const randomIndex = Math.floor(Math.random() * santas.length);
-                    const s = santas[randomIndex];
+                const fireworks = fireworkSpritesRef.current;
+                if (fireworks.length > 0 && currentUserRef.current) {
+                    // Auto-click a random firework
+                    const randomIndex = Math.floor(Math.random() * fireworks.length);
+                    const s = fireworks[randomIndex];
                     
-                    // Spawn explosion and remove santa
+                    // Spawn explosion and remove firework
                     const explosionColor = s.isGolden ? "#FFD700" : "#4CAF50";
                     spawnExplosion(s.x, s.y, explosionColor); // Green for auto-click, gold for golden
-                    santas.splice(randomIndex, 1);
+                    fireworks.splice(randomIndex, 1);
                     
-                    // Calculate points for auto-clicked santa using helper function
+                    // Calculate points for auto-clicked firework using helper function
                     const user = currentUserRef.current;
                     // Base worth is (santaWorthLevel + 1), so level 0 = 1 point, level 1 = 2 points, etc.
                     const basePoints = santaWorthLevelRef.current + 1;
@@ -535,15 +540,15 @@ export default function Snow({
                         try {
                             const userDocRef = doc(db, "Users", user);
                             updateDoc(userDocRef, {
-                                santasPopped: increment(points)
+                                santasPopped: increment(points) // database field name stays same
                             }).then(() => {
-                                console.log(`Auto-clicked santa for ${user} (worth: ${points})`);
+                                console.log(`Auto-clicked firework for ${user} (worth: ${points})`);
                                 // Dispatch custom event to notify other components
                                 window.dispatchEvent(new CustomEvent('santaPopped', { 
                                     detail: { increment: points } 
                                 }));
                             }).catch((error) => {
-                                console.error("Error updating santa count:", error);
+                                console.error("Error updating firework count:", error);
                             });
                         } catch (error) {
                             console.error("Error with auto-click:", error);
@@ -556,8 +561,8 @@ export default function Snow({
         const onResize = () => {
             setSize();
             initParticles();
-            // clear current santas so they re-enter reasonably positioned
-            santaSpritesRef.current = [];
+            // clear current fireworks so they re-enter reasonably positioned
+            fireworkSpritesRef.current = [];
         };
         window.addEventListener("resize", onResize);
 
