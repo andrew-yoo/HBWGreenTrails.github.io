@@ -17,7 +17,7 @@ import { useAuth } from '../context/AuthContext';
                 <div className='link' id='homepage'><Link className="a" to="/HBWGreentrails/">Home</Link></div>
                 <div className='link' id='volunteer'><Link className="a" to="/volenterpage/">Volunteer!!</Link></div>
                 <div className='link' id='leaderboard'><Link className="a" to="/leaderboard/">Leaderboards</Link></div>
-                <div className='link' id='santa'><Link className="a" to="/santa/">🎅 Santa</Link></div>
+                <div className='link' id='santa'><Link className="a" to="/santa/">🎆 New Year's</Link></div>
                 {isAdmin && (
                     <div className='link' id='adddata'><Link className="a" to="/adddata/">Add Event</Link></div>
                 )}
