@@ -109,7 +109,7 @@ const SantaUpgrades: React.FC = () => {
 
         const cost = autoClickerCosts[level];
         if (upgrades.santasPopped < cost) {
-            showNotification(`Not enough santas! You need ${cost} santas but only have ${upgrades.santasPopped}.`, "error");
+            showNotification(`Not enough fireworks! You need ${cost} fireworks but only have ${upgrades.santasPopped}.`, "error");
             return;
         }
 
@@ -148,7 +148,7 @@ const SantaUpgrades: React.FC = () => {
 
         const cost = spawnSpeedCosts[level];
         if (upgrades.santasPopped < cost) {
-            showNotification(`Not enough santas! You need ${cost} santas but only have ${upgrades.santasPopped}.`, "error");
+            showNotification(`Not enough fireworks! You need ${cost} fireworks but only have ${upgrades.santasPopped}.`, "error");
             return;
         }
 
@@ -187,7 +187,7 @@ const SantaUpgrades: React.FC = () => {
 
         const cost = santaWorthCosts[level];
         if (upgrades.santasPopped < cost) {
-            showNotification(`Not enough santas! You need ${cost} santas but only have ${upgrades.santasPopped}.`, "error");
+            showNotification(`Not enough fireworks! You need ${cost} fireworks but only have ${upgrades.santasPopped}.`, "error");
             return;
         }
 
@@ -226,7 +226,7 @@ const SantaUpgrades: React.FC = () => {
 
         const cost = luckyClickCosts[level];
         if (upgrades.santasPopped < cost) {
-            showNotification(`Not enough santas! You need ${cost} santas but only have ${upgrades.santasPopped}.`, "error");
+            showNotification(`Not enough fireworks! You need ${cost} fireworks but only have ${upgrades.santasPopped}.`, "error");
             return;
         }
 
@@ -265,7 +265,7 @@ const SantaUpgrades: React.FC = () => {
 
         const cost = goldRushCosts[level];
         if (upgrades.santasPopped < cost) {
-            showNotification(`Not enough santas! You need ${cost} santas but only have ${upgrades.santasPopped}.`, "error");
+            showNotification(`Not enough fireworks! You need ${cost} fireworks but only have ${upgrades.santasPopped}.`, "error");
             return;
         }
 
@@ -304,7 +304,7 @@ const SantaUpgrades: React.FC = () => {
 
         const cost = clickMultiplierCosts[level];
         if (upgrades.santasPopped < cost) {
-            showNotification(`Not enough santas! You need ${cost} santas but only have ${upgrades.santasPopped}.`, "error");
+            showNotification(`Not enough fireworks! You need ${cost} fireworks but only have ${upgrades.santasPopped}.`, "error");
             return;
         }
 
@@ -332,7 +332,7 @@ const SantaUpgrades: React.FC = () => {
     if (!currentUser) {
         return (
             <div>
-                <Top message="Santa Shop" shadow={true} />
+                <Top message="New Year's Shop" shadow={true} />
                 <Navbar />
                 <div style={{ 
                     padding: '40px', 
@@ -340,9 +340,9 @@ const SantaUpgrades: React.FC = () => {
                     minHeight: '60vh',
                     backgroundColor: '#f5f5f5'
                 }}>
-                    <h2 style={{ color: '#d32f2f', marginBottom: '20px' }}>🎅 Santa Shop</h2>
+                    <h2 style={{ color: '#1976d2', marginBottom: '20px' }}>🎆 New Year's Shop</h2>
                     <p style={{ fontSize: '18px', color: '#666' }}>
-                        Please login to access the Santa Shop!
+                        Please login to access the New Year's Shop!
                     </p>
                 </div>
                 <Cloudfooter />
@@ -353,7 +353,7 @@ const SantaUpgrades: React.FC = () => {
     if (loading) {
         return (
             <div>
-                <Top message="Santa Shop" shadow={true} />
+                <Top message="New Year's Shop" shadow={true} />
                 <Navbar />
                 <div style={{ padding: '40px', textAlign: 'center' }}>
                     <p>Loading...</p>
@@ -365,14 +365,14 @@ const SantaUpgrades: React.FC = () => {
 
     return (
         <div>
-            <Top message="Santa Shop" shadow={true} />
+            <Top message="New Year's Shop" shadow={true} />
             <Navbar />
             <div style={{ 
                 padding: '40px',
                 maxWidth: '1400px',
                 margin: '0 auto',
                 minHeight: '60vh',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: 'linear-gradient(135deg, #1e88e5 0%, #7c4dff 100%)', // New Year's blue/purple gradient
                 borderRadius: '20px',
                 boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
                 marginTop: '20px',
@@ -386,7 +386,7 @@ const SantaUpgrades: React.FC = () => {
                     fontWeight: 'bold',
                     textShadow: '2px 2px 4px rgba(0,0,0,0.3)'
                 }}>
-                    🎅 Santa Shop 🎅
+                    🎆 New Year's Shop 🎆
                 </h2>
                 <p style={{
                     textAlign: 'center',
@@ -395,7 +395,7 @@ const SantaUpgrades: React.FC = () => {
                     marginBottom: '30px',
                     fontStyle: 'italic'
                 }}>
-                    Upgrade your Santa-catching abilities!
+                    Upgrade your Firework-catching abilities!
                 </p>
 
                 {/* Stats Section */}
@@ -420,24 +420,24 @@ const SantaUpgrades: React.FC = () => {
                         <div style={{ 
                             textAlign: 'center',
                             padding: '15px 30px',
-                            backgroundColor: '#fff5f5',
+                            backgroundColor: '#e3f2fd',
                             borderRadius: '10px',
-                            border: '2px solid #d32f2f'
+                            border: '2px solid #1976d2'
                         }}>
-                            <p style={{ fontSize: '20px', marginBottom: '8px', color: '#666' }}>🎅 Santas Available</p>
-                            <p style={{ fontSize: '36px', fontWeight: 'bold', color: '#d32f2f', margin: 0 }}>
+                            <p style={{ fontSize: '20px', marginBottom: '8px', color: '#666' }}>🎆 Fireworks Available</p>
+                            <p style={{ fontSize: '36px', fontWeight: 'bold', color: '#1976d2', margin: 0 }}>
                                 {upgrades.santasPopped}
                             </p>
                         </div>
                         <div style={{ 
                             textAlign: 'center',
                             padding: '15px 30px',
-                            backgroundColor: '#f0f8ff',
+                            backgroundColor: '#fff3e0',
                             borderRadius: '10px',
-                            border: '2px solid #2196F3'
+                            border: '2px solid #f57c00'
                         }}>
-                            <p style={{ fontSize: '20px', marginBottom: '8px', color: '#666' }}>💎 Santa Value</p>
-                            <p style={{ fontSize: '36px', fontWeight: 'bold', color: '#2196F3', margin: 0 }}>
+                            <p style={{ fontSize: '20px', marginBottom: '8px', color: '#666' }}>💎 Firework Value</p>
+                            <p style={{ fontSize: '36px', fontWeight: 'bold', color: '#f57c00', margin: 0 }}>
                                 {upgrades.santaWorthLevel + 1}x
                             </p>
                         </div>
@@ -478,7 +478,7 @@ const SantaUpgrades: React.FC = () => {
                             🖱️ Auto-Clicker
                         </h3>
                         <p style={{ marginBottom: '15px', color: '#555', lineHeight: '1.6', minHeight: '80px' }}>
-                            Automatically clicks santas for you every few seconds! The ultimate passive income for lazy elves.
+                            Automatically clicks fireworks for you every few seconds! The ultimate passive income for celebration enthusiasts.
                             {upgrades.autoClickerLevel > 0 && (
                                 <span style={{ display: 'block', marginTop: '10px', color: '#4CAF50', fontWeight: 'bold' }}>
                                     ✓ Active: Clicking every {Math.max(2, 10 - upgrades.autoClickerLevel * 2)}s
@@ -488,8 +488,8 @@ const SantaUpgrades: React.FC = () => {
                         {upgrades.autoClickerLevel < autoClickerCosts.length ? (
                             <>
                                 <p style={{ fontSize: '20px', marginBottom: '20px', textAlign: 'center' }}>
-                                    Cost: <strong style={{ color: '#d32f2f', fontSize: '24px' }}>
-                                        {autoClickerCosts[upgrades.autoClickerLevel]} 🎅
+                                    Cost: <strong style={{ color: '#1976d2', fontSize: '24px' }}>
+                                        {autoClickerCosts[upgrades.autoClickerLevel]} 🎆
                                     </strong>
                                 </p>
                                 <button 
@@ -570,7 +570,7 @@ const SantaUpgrades: React.FC = () => {
                             ⚡ Spawn Speed
                         </h3>
                         <p style={{ marginBottom: '15px', color: '#555', lineHeight: '1.6', minHeight: '80px' }}>
-                            Increases how often santas appear on your screen! More santas = more opportunities to click.
+                            Increases how often fireworks appear on your screen! More fireworks = more opportunities to click.
                             {upgrades.spawnSpeedLevel > 0 && (
                                 <span style={{ display: 'block', marginTop: '10px', color: '#2196F3', fontWeight: 'bold' }}>
                                     ✓ Active: Spawn time reduced by {upgrades.spawnSpeedLevel * 20}%
@@ -580,8 +580,8 @@ const SantaUpgrades: React.FC = () => {
                         {upgrades.spawnSpeedLevel < spawnSpeedCosts.length ? (
                             <>
                                 <p style={{ fontSize: '20px', marginBottom: '20px', textAlign: 'center' }}>
-                                    Cost: <strong style={{ color: '#d32f2f', fontSize: '24px' }}>
-                                        {spawnSpeedCosts[upgrades.spawnSpeedLevel]} 🎅
+                                    Cost: <strong style={{ color: '#1976d2', fontSize: '24px' }}>
+                                        {spawnSpeedCosts[upgrades.spawnSpeedLevel]} 🎆
                                     </strong>
                                 </p>
                                 <button 
@@ -659,21 +659,21 @@ const SantaUpgrades: React.FC = () => {
                             Level {upgrades.santaWorthLevel}/{santaWorthCosts.length}
                         </div>
                         <h3 style={{ color: '#FF9800', marginBottom: '15px', fontSize: '28px', fontWeight: 'bold' }}>
-                            💎 Santa Worth
+                            💎 Firework Worth
                         </h3>
                         <p style={{ marginBottom: '15px', color: '#555', lineHeight: '1.6', minHeight: '80px' }}>
-                            Increases the value of each Santa you pop! Each level adds +1 to your score per click.
+                            Increases the value of each Firework you pop! Each level adds +1 to your score per click.
                             {upgrades.santaWorthLevel > 0 && (
                                 <span style={{ display: 'block', marginTop: '10px', color: '#FF9800', fontWeight: 'bold' }}>
-                                    ✓ Active: Each santa worth {upgrades.santaWorthLevel + 1} points
+                                    ✓ Active: Each firework worth {upgrades.santaWorthLevel + 1} points
                                 </span>
                             )}
                         </p>
                         {upgrades.santaWorthLevel < santaWorthCosts.length ? (
                             <>
                                 <p style={{ fontSize: '20px', marginBottom: '20px', textAlign: 'center' }}>
-                                    Cost: <strong style={{ color: '#d32f2f', fontSize: '24px' }}>
-                                        {santaWorthCosts[upgrades.santaWorthLevel]} 🎅
+                                    Cost: <strong style={{ color: '#1976d2', fontSize: '24px' }}>
+                                        {santaWorthCosts[upgrades.santaWorthLevel]} 🎆
                                     </strong>
                                 </p>
                                 <button 
@@ -764,8 +764,8 @@ const SantaUpgrades: React.FC = () => {
                         {upgrades.luckyClickLevel < luckyClickCosts.length ? (
                             <>
                                 <p style={{ fontSize: '20px', marginBottom: '20px', textAlign: 'center' }}>
-                                    Cost: <strong style={{ color: '#d32f2f', fontSize: '24px' }}>
-                                        {luckyClickCosts[upgrades.luckyClickLevel]} 🎅
+                                    Cost: <strong style={{ color: '#1976d2', fontSize: '24px' }}>
+                                        {luckyClickCosts[upgrades.luckyClickLevel]} 🎆
                                     </strong>
                                 </p>
                                 <button 
@@ -846,18 +846,18 @@ const SantaUpgrades: React.FC = () => {
                             🌟 Gold Rush
                         </h3>
                         <p style={{ marginBottom: '15px', color: '#555', lineHeight: '1.6', minHeight: '80px' }}>
-                            Occasionally spawn golden santas worth 5x normal points! Strike gold!
+                            Occasionally spawn golden fireworks worth 5x normal points! Strike gold!
                             {upgrades.goldRushLevel > 0 && (
                                 <span style={{ display: 'block', marginTop: '10px', color: '#DAA520', fontWeight: 'bold' }}>
-                                    ✓ Active: {upgrades.goldRushLevel * 3}% chance for golden santa
+                                    ✓ Active: {upgrades.goldRushLevel * 3}% chance for golden firework
                                 </span>
                             )}
                         </p>
                         {upgrades.goldRushLevel < goldRushCosts.length ? (
                             <>
                                 <p style={{ fontSize: '20px', marginBottom: '20px', textAlign: 'center' }}>
-                                    Cost: <strong style={{ color: '#d32f2f', fontSize: '24px' }}>
-                                        {goldRushCosts[upgrades.goldRushLevel]} 🎅
+                                    Cost: <strong style={{ color: '#1976d2', fontSize: '24px' }}>
+                                        {goldRushCosts[upgrades.goldRushLevel]} 🎆
                                     </strong>
                                 </p>
                                 <button 
@@ -938,7 +938,7 @@ const SantaUpgrades: React.FC = () => {
                             ⚡ Click Multiplier
                         </h3>
                         <p style={{ marginBottom: '15px', color: '#555', lineHeight: '1.6', minHeight: '80px' }}>
-                            Multiplies all your clicks! The ultimate power-up for serious santa hunters.
+                            Multiplies all your clicks! The ultimate power-up for serious firework hunters.
                             {upgrades.clickMultiplierLevel > 0 && (
                                 <span style={{ display: 'block', marginTop: '10px', color: '#E91E63', fontWeight: 'bold' }}>
                                     ✓ Active: {(1 + upgrades.clickMultiplierLevel * 0.1).toFixed(1)}x multiplier
@@ -948,8 +948,8 @@ const SantaUpgrades: React.FC = () => {
                         {upgrades.clickMultiplierLevel < clickMultiplierCosts.length ? (
                             <>
                                 <p style={{ fontSize: '20px', marginBottom: '20px', textAlign: 'center' }}>
-                                    Cost: <strong style={{ color: '#d32f2f', fontSize: '24px' }}>
-                                        {clickMultiplierCosts[upgrades.clickMultiplierLevel]} 🎅
+                                    Cost: <strong style={{ color: '#1976d2', fontSize: '24px' }}>
+                                        {clickMultiplierCosts[upgrades.clickMultiplierLevel]} 🎆
                                     </strong>
                                 </p>
                                 <button 
@@ -1013,7 +1013,7 @@ const SantaUpgrades: React.FC = () => {
                     border: '3px solid #ffd700'
                 }}>
                     <h3 style={{ 
-                        color: '#d32f2f', 
+                        color: '#1976d2', 
                         marginBottom: '20px',
                         fontSize: '24px',
                         fontWeight: 'bold',
@@ -1022,13 +1022,13 @@ const SantaUpgrades: React.FC = () => {
                         ℹ️ How to Play
                     </h3>
                     <ol style={{ lineHeight: '2', color: '#555', fontSize: '16px', paddingLeft: '30px' }}>
-                        <li><strong>Click flying Santas</strong> anywhere on the site to pop them and earn points!</li>
+                        <li><strong>Click flying Fireworks</strong> anywhere on the site to pop them and earn points!</li>
                         <li><strong>Spend your points</strong> on upgrades to become more efficient</li>
                         <li><strong>Auto-clicker</strong> works on ALL pages across the site automatically</li>
-                        <li><strong>Spawn speed</strong> increases how often Santas appear</li>
-                        <li><strong>Santa worth</strong> makes each click more valuable</li>
+                        <li><strong>Spawn speed</strong> increases how often Fireworks appear</li>
+                        <li><strong>Firework worth</strong> makes each click more valuable</li>
                         <li><strong>Lucky click</strong> gives you a chance for double points</li>
-                        <li><strong>Gold rush</strong> spawns special golden santas worth 5x points</li>
+                        <li><strong>Gold rush</strong> spawns special golden fireworks worth 5x points</li>
                         <li><strong>Click multiplier</strong> boosts all your clicks exponentially</li>
                         <li><strong>Pro tip:</strong> Combine all upgrades for maximum efficiency!</li>
                     </ol>

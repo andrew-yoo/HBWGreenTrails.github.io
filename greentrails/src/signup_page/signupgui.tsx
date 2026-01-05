@@ -172,7 +172,7 @@ import { showNotification } from '../componets/Notification';
                         <h3>🌲 Welcome, {currentUser}! 🌲</h3>
                         <p>You are currently logged in.</p>
                         <p style={{ fontSize: '16px', marginTop: '20px' }}>
-                            🎅 <strong>Santa Tracking Active!</strong> Click flying Santas anywhere on the site to earn points and climb the leaderboard!
+                            🎆 <strong>Firework Tracking Active!</strong> Click flying Fireworks anywhere on the site to earn points and climb the leaderboard!
                         </p>
                         <button onClick={() => logout()}>Logout</button>
                     </div>
@@ -180,7 +180,7 @@ import { showNotification } from '../componets/Notification';
                     <div className="signup">
                         <h3>{isLoginMode ? '🔐 Login' : '✨ Sign Up'}</h3>
                         <p style={{ fontSize: '16px', color: '#2d5a3d', marginBottom: '20px' }}>
-                            🎅 Track your Santa pops and compete on the leaderboard!
+                            🎆 Track your Firework pops and compete on the leaderboard!
                         </p>
                         {isLoginMode && allUserNames.length > 0 ? (
                             <div>

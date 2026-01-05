@@ -36,7 +36,7 @@ const SantaLeaderboard: React.FC = () => {
 
     return (
         <div id='santa-table'>
-            <h3 id='santa-title'>Santas Popped</h3>
+            <h3 id='santa-title'>Fireworks Popped</h3>
             <div id='santa-leaderboard' className='boardcon'> 
                 {leaderboardData.map((user, index) => (
                     <div className='lbentrie' key={user.id}>
