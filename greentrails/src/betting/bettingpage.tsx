@@ -2,7 +2,7 @@ import '../styles/style.css'
 import '../styles/betting.css'
 import React, { useEffect, useState } from 'react';
 import { db } from '../base/firebaseConfig';
-import { collection, getDocs, addDoc, doc, getDoc, updateDoc, increment, query, where, orderBy } from "firebase/firestore";
+import { collection, getDocs, addDoc, doc, getDoc, updateDoc, increment, query, where, orderBy, runTransaction } from "firebase/firestore";
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../componets/sadnavbar';
 import Top from '../componets/header';
@@ -111,19 +111,34 @@ const BettingPage: React.FC = () => {
         }
 
         try {
-            // Deduct fireworks from creator
-            const userDocRef = doc(db, "Users", currentUser);
-            await updateDoc(userDocRef, {
-                santasPopped: increment(-wager)
-            });
-
-            // Create bet document
-            await addDoc(collection(db, "bets"), {
-                creator: currentUser,
-                description: newBetDescription.trim(),
-                wager: wager,
-                status: 'open',
-                createdAt: new Date()
+            // Use transaction to ensure atomicity
+            await runTransaction(db, async (transaction) => {
+                const userDocRef = doc(db, "Users", currentUser);
+                const userDoc = await transaction.get(userDocRef);
+                
+                if (!userDoc.exists()) {
+                    throw new Error("User not found");
+                }
+                
+                const currentFireworks = userDoc.data().santasPopped || 0;
+                if (currentFireworks < wager) {
+                    throw new Error("Insufficient fireworks");
+                }
+                
+                // Deduct fireworks from creator
+                transaction.update(userDocRef, {
+                    santasPopped: increment(-wager)
+                });
+                
+                // Create bet document
+                const betDocRef = doc(collection(db, "bets"));
+                transaction.set(betDocRef, {
+                    creator: currentUser,
+                    description: newBetDescription.trim(),
+                    wager: wager,
+                    status: 'open',
+                    createdAt: new Date()
+                });
             });
 
             showNotification(`Bet created! ${wager} fireworks wagered.`, "success");
@@ -133,7 +148,11 @@ const BettingPage: React.FC = () => {
             loadUserFireworks();
         } catch (error) {
             console.error("Error creating bet:", error);
-            showNotification("Error creating bet", "error");
+            if (error instanceof Error && error.message === "Insufficient fireworks") {
+                showNotification("Not enough fireworks!", "error");
+            } else {
+                showNotification("Error creating bet", "error");
+            }
         }
     };
 
@@ -154,18 +173,43 @@ const BettingPage: React.FC = () => {
         }
 
         try {
-            // Deduct fireworks from opponent
-            const userDocRef = doc(db, "Users", currentUser);
-            await updateDoc(userDocRef, {
-                santasPopped: increment(-bet.wager)
-            });
-
-            // Update bet document
-            const betDocRef = doc(db, "bets", bet.id);
-            await updateDoc(betDocRef, {
-                opponent: currentUser,
-                status: 'accepted',
-                acceptedAt: new Date()
+            // Use transaction to ensure atomicity
+            await runTransaction(db, async (transaction) => {
+                const userDocRef = doc(db, "Users", currentUser);
+                const betDocRef = doc(db, "bets", bet.id);
+                
+                const userDoc = await transaction.get(userDocRef);
+                const betDoc = await transaction.get(betDocRef);
+                
+                if (!userDoc.exists()) {
+                    throw new Error("User not found");
+                }
+                
+                if (!betDoc.exists()) {
+                    throw new Error("Bet not found");
+                }
+                
+                const betData = betDoc.data();
+                if (betData.status !== 'open') {
+                    throw new Error("Bet is no longer open");
+                }
+                
+                const currentFireworks = userDoc.data().santasPopped || 0;
+                if (currentFireworks < bet.wager) {
+                    throw new Error("Insufficient fireworks");
+                }
+                
+                // Deduct fireworks from opponent
+                transaction.update(userDocRef, {
+                    santasPopped: increment(-bet.wager)
+                });
+                
+                // Update bet document
+                transaction.update(betDocRef, {
+                    opponent: currentUser,
+                    status: 'accepted',
+                    acceptedAt: new Date()
+                });
             });
 
             showNotification(`Bet accepted! ${bet.wager} fireworks wagered.`, "success");
@@ -173,7 +217,17 @@ const BettingPage: React.FC = () => {
             loadUserFireworks();
         } catch (error) {
             console.error("Error accepting bet:", error);
-            showNotification("Error accepting bet", "error");
+            if (error instanceof Error) {
+                if (error.message === "Insufficient fireworks") {
+                    showNotification("Not enough fireworks!", "error");
+                } else if (error.message === "Bet is no longer open") {
+                    showNotification("This bet is no longer available", "error");
+                } else {
+                    showNotification("Error accepting bet", "error");
+                }
+            } else {
+                showNotification("Error accepting bet", "error");
+            }
         }
     };
 
@@ -189,18 +243,37 @@ const BettingPage: React.FC = () => {
         }
 
         try {
-            // Award winnings (2x wager to winner)
-            const winnerDocRef = doc(db, "Users", currentUser);
-            await updateDoc(winnerDocRef, {
-                santasPopped: increment(bet.wager * 2)
-            });
-
-            // Update bet document
-            const betDocRef = doc(db, "bets", bet.id);
-            await updateDoc(betDocRef, {
-                winner: currentUser,
-                status: 'completed',
-                completedAt: new Date()
+            // Use transaction to ensure atomicity
+            await runTransaction(db, async (transaction) => {
+                const winnerDocRef = doc(db, "Users", currentUser);
+                const betDocRef = doc(db, "bets", bet.id);
+                
+                const betDoc = await transaction.get(betDocRef);
+                
+                if (!betDoc.exists()) {
+                    throw new Error("Bet not found");
+                }
+                
+                const betData = betDoc.data();
+                if (betData.status !== 'accepted') {
+                    throw new Error("Bet must be accepted before declaring winner");
+                }
+                
+                if (betData.winner) {
+                    throw new Error("Winner already declared");
+                }
+                
+                // Award winnings (2x wager to winner)
+                transaction.update(winnerDocRef, {
+                    santasPopped: increment(bet.wager * 2)
+                });
+                
+                // Update bet document
+                transaction.update(betDocRef, {
+                    winner: currentUser,
+                    status: 'completed',
+                    completedAt: new Date()
+                });
             });
 
             showNotification(`You won ${bet.wager * 2} fireworks!`, "success");
@@ -208,7 +281,17 @@ const BettingPage: React.FC = () => {
             loadUserFireworks();
         } catch (error) {
             console.error("Error declaring winner:", error);
-            showNotification("Error declaring winner", "error");
+            if (error instanceof Error) {
+                if (error.message === "Bet must be accepted before declaring winner") {
+                    showNotification("Bet must be accepted first", "error");
+                } else if (error.message === "Winner already declared") {
+                    showNotification("Winner already declared for this bet", "error");
+                } else {
+                    showNotification("Error declaring winner", "error");
+                }
+            } else {
+                showNotification("Error declaring winner", "error");
+            }
         }
     };
 
@@ -229,18 +312,33 @@ const BettingPage: React.FC = () => {
         }
 
         try {
-            // Refund fireworks to creator
-            const userDocRef = doc(db, "Users", bet.creator);
-            await updateDoc(userDocRef, {
-                santasPopped: increment(bet.wager)
-            });
-
-            // Update bet document
-            const betDocRef = doc(db, "bets", bet.id);
-            await updateDoc(betDocRef, {
-                status: 'completed',
-                winner: 'cancelled',
-                completedAt: new Date()
+            // Use transaction to ensure atomicity
+            await runTransaction(db, async (transaction) => {
+                const userDocRef = doc(db, "Users", bet.creator);
+                const betDocRef = doc(db, "bets", bet.id);
+                
+                const betDoc = await transaction.get(betDocRef);
+                
+                if (!betDoc.exists()) {
+                    throw new Error("Bet not found");
+                }
+                
+                const betData = betDoc.data();
+                if (betData.status !== 'open') {
+                    throw new Error("Can only cancel open bets");
+                }
+                
+                // Refund fireworks to creator
+                transaction.update(userDocRef, {
+                    santasPopped: increment(bet.wager)
+                });
+                
+                // Update bet document
+                transaction.update(betDocRef, {
+                    status: 'completed',
+                    winner: 'cancelled',
+                    completedAt: new Date()
+                });
             });
 
             showNotification("Bet cancelled and fireworks refunded", "success");
@@ -248,7 +346,11 @@ const BettingPage: React.FC = () => {
             loadUserFireworks();
         } catch (error) {
             console.error("Error cancelling bet:", error);
-            showNotification("Error cancelling bet", "error");
+            if (error instanceof Error && error.message === "Can only cancel open bets") {
+                showNotification("This bet can no longer be cancelled", "error");
+            } else {
+                showNotification("Error cancelling bet", "error");
+            }
         }
     };
 
