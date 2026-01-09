@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { db } from '../base/firebaseConfig';
+import { doc, updateDoc, Timestamp } from 'firebase/firestore';
 
 interface AuthContextType {
     currentUser: string | null;
@@ -21,6 +23,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [currentUser, setCurrentUser] = useState<string | null>(null);
     const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
+    // Function to update user's last active timestamp
+    const updateUserPresence = async (username: string) => {
+        try {
+            const userRef = doc(db, 'Users', username);
+            await updateDoc(userRef, {
+                lastActive: Timestamp.now()
+            });
+        } catch (error) {
+            console.error('Error updating user presence:', error);
+        }
+    };
+
     useEffect(() => {
         // Load user from localStorage on mount
         const savedUser = localStorage.getItem('currentUser');
@@ -30,8 +44,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setCurrentUser(savedUser);
             setIsAdmin(savedAdminStatus === 'true');
             console.log('AuthContext: User restored:', savedUser, 'Admin:', savedAdminStatus === 'true');
+            // Update presence when user is restored from localStorage
+            updateUserPresence(savedUser);
         }
     }, []);
+
+    useEffect(() => {
+        // Set up periodic presence updates for logged-in users
+        if (!currentUser) return;
+
+        // Update presence immediately
+        updateUserPresence(currentUser);
+
+        // Update presence every 5 minutes to keep user marked as active
+        const interval = setInterval(() => {
+            updateUserPresence(currentUser);
+        }, 5 * 60 * 1000); // 5 minutes
+
+        return () => clearInterval(interval);
+    }, [currentUser]);
 
     const login = (username: string, adminStatus: boolean = false) => {
         console.log('AuthContext: Logging in user:', username, 'Admin:', adminStatus);
@@ -40,6 +71,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('currentUser', username);
         localStorage.setItem('isAdmin', adminStatus.toString());
         console.log('AuthContext: User saved to localStorage:', username);
+        // Update presence on login
+        updateUserPresence(username);
     };
 
     const logout = () => {

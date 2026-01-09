@@ -8,6 +8,7 @@ import Navbar from '../componets/sadnavbar';
 import Top from '../componets/header';
 import { Cloudfooter } from '../componets/footer';
 import { showNotification } from '../componets/Notification';
+import ActiveUsers from '../componets/ActiveUsers';
 
 interface UserUpgrades {
     autoClickerLevel: number;
@@ -442,6 +443,15 @@ const SantaUpgrades: React.FC = () => {
                             </p>
                         </div>
                     </div>
+                </div>
+
+                {/* Active Users Section */}
+                <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    marginBottom: '30px'
+                }}>
+                    <ActiveUsers />
                 </div>
 
                 {/* Upgrades Section */}
