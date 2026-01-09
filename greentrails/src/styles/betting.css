@@ -1,0 +1,484 @@
+/* Betting Page Styles */
+
+.betting-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    min-height: calc(100vh - 200px);
+    position: relative;
+    z-index: 1;
+}
+
+.betting-header {
+    text-align: center;
+    margin-bottom: 30px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    color: white;
+}
+
+.betting-header h2 {
+    margin: 0 0 15px 0;
+    font-size: 2.5em;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.user-fireworks {
+    font-size: 1.3em;
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    display: inline-block;
+}
+
+.user-fireworks strong {
+    color: #ffd700;
+    font-size: 1.2em;
+}
+
+.login-message {
+    text-align: center;
+    padding: 20px;
+    background: #fff3cd;
+    border: 2px solid #ffc107;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.login-message p {
+    margin: 0;
+    font-size: 1.2em;
+    color: #856404;
+}
+
+/* Create Bet Section */
+
+.create-bet-section {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+.create-bet-section h3 {
+    margin-top: 0;
+    color: #333;
+    font-size: 1.8em;
+    margin-bottom: 20px;
+}
+
+.create-bet-form {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+}
+
+.bet-input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 1em;
+    transition: border-color 0.3s;
+    box-sizing: border-box;
+}
+
+.bet-input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.bet-input-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.bet-input-small {
+    width: 100%;
+}
+
+select.bet-input {
+    width: 100%;
+}
+
+.odds-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.odds-container label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-weight: bold;
+    color: #555;
+}
+
+.odds-container label input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.btn-create-bet {
+    padding: 12px 30px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    width: 100%;
+    box-sizing: border-box;
+}
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-create-bet:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-create-bet:active {
+    transform: translateY(0);
+}
+
+/* Bets Section */
+
+.bets-section {
+    margin-bottom: 30px;
+}
+
+.bets-section h3 {
+    color: #333;
+    font-size: 1.8em;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.no-bets {
+    text-align: center;
+    padding: 40px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.no-bets p {
+    font-size: 1.2em;
+    color: #666;
+    margin: 0;
+}
+
+.bets-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 20px;
+}
+
+/* Bet Cards */
+
+.bet-card {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+    border-left: 5px solid #ccc;
+    display: flex;
+    flex-direction: column;
+    min-height: 280px;
+    box-sizing: border-box;
+}
+
+.bet-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.bet-status-open {
+    border-left-color: #28a745;
+}
+
+.bet-status-accepted {
+    border-left-color: #ffc107;
+}
+
+.bet-status-completed {
+    border-left-color: #6c757d;
+}
+
+.bet-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.bet-creator {
+    font-weight: bold;
+    font-size: 1.1em;
+    color: #333;
+}
+
+.bet-status {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: bold;
+}
+
+.bet-status.bet-status-open {
+    background: #28a745;
+    color: white;
+}
+
+.bet-status.bet-status-accepted {
+    background: #ffc107;
+    color: #333;
+}
+
+.bet-status.bet-status-completed {
+    background: #6c757d;
+    color: white;
+}
+
+.bet-description {
+    margin-bottom: 12px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    min-height: 60px;
+    box-sizing: border-box;
+}
+
+.bet-description p {
+    margin: 0 0 8px 0;
+    font-size: 1em;
+    line-height: 1.4;
+    color: #333;
+    word-wrap: break-word;
+}
+
+.bet-type {
+    font-size: 0.85em;
+    color: #666;
+    margin-top: 6px;
+}
+
+.bet-deadline {
+    font-size: 0.8em;
+    color: #e74c3c;
+    margin-top: 4px;
+}
+
+.bet-odds {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    background: #e3f2fd;
+    border-radius: 8px;
+    font-size: 0.9em;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.bet-odds strong {
+    color: #1976d2;
+    font-size: 1.05em;
+}
+
+.bet-wager {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 0.95em;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.bet-wager strong {
+    color: #667eea;
+}
+
+.bet-potential {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.bet-potential strong {
+    color: #28a745;
+    font-size: 1.05em;
+}
+
+.bet-total {
+    color: #28a745;
+}
+
+.bet-total strong {
+    color: #28a745;
+    font-size: 1.1em;
+}
+
+.bet-opponent, .bet-winner, .bet-cancelled {
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.bet-opponent {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.bet-winner {
+    background: #d4edda;
+    color: #155724;
+}
+
+.bet-cancelled {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.bet-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
+    padding-top: 12px;
+}
+
+.bet-actions button {
+    flex: 1;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: transform 0.2s, opacity 0.2s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-sizing: border-box;
+}
+
+.bet-actions button:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
+}
+
+.bet-actions button:active {
+    transform: translateY(0);
+}
+
+.btn-accept-bet {
+    background: #28a745;
+    color: white;
+}
+
+.btn-cancel-bet {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-declare-winner {
+    background: #ffc107;
+    color: #333;
+}
+
+.bet-timestamp {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #e0e0e0;
+    text-align: right;
+}
+
+.bet-timestamp small {
+    color: #666;
+    font-size: 0.85em;
+}
+
+/* Betting Info Section */
+
+.betting-info {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+.betting-info h3 {
+    margin-top: 0;
+    color: #333;
+    font-size: 1.5em;
+    margin-bottom: 15px;
+}
+
+.betting-info ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.betting-info li {
+    padding: 10px 0;
+    font-size: 1.05em;
+    color: #555;
+    line-height: 1.6;
+}
+
+.betting-info li::before {
+    content: '✓';
+    margin-right: 10px;
+    color: #28a745;
+    font-weight: bold;
+}
+
+/* Responsive Design */
+
+@media (max-width: 768px) {
+    .betting-container {
+        padding: 10px;
+    }
+
+    .betting-header h2 {
+        font-size: 1.8em;
+    }
+
+    .bet-input-row {
+        grid-template-columns: 1fr;
+    }
+
+    .odds-container {
+        grid-template-columns: 1fr;
+    }
+
+    .bets-list {
+        grid-template-columns: 1fr;
+    }
+
+    .bet-wager {
+        flex-direction: column;
+        gap: 8px;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    .bet-input-row {
+        grid-template-columns: 1fr;
+    }
+}
