@@ -8,6 +8,7 @@ import Leaderboard from './leaderboard/leaderboard';
 import Signup from './signup_page/signup';
 import SantaUpgrades from './santa/santaupgrades';
 import BettingPage from './betting/bettingpage';
+import MessagingPage from './messaging/messagingpage';
 import Icon from './componets/icon'
 import Snow from './componets/snow';
 import TabAlarm from './componets/tabAlarm';
@@ -33,6 +34,7 @@ const App: React.FC = () => {
                         <Route path="/adddata/*" element={<Adddatapage />} />
                         <Route path="/leaderboard/*" element={<Leaderboard />} />
                         <Route path="/signup/*" element={<Signup />} /> 
+                        <Route path="/messaging/*" element={<MessagingPage />} />
                         <Route path="/santa/*" element={<SantaUpgrades />} />
                         <Route path="/betting/*" element={<BettingPage />} />
                     </Routes>
