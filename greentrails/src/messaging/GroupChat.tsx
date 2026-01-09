@@ -211,7 +211,7 @@ const GroupChat: React.FC<GroupChatProps> = ({
                                     <input
                                         type="checkbox"
                                         checked={selectedUsers.includes(userId)}
-                                        onChange={() => {}}
+                                        readOnly
                                     />
                                     <span>{userId}</span>
                                 </div>
