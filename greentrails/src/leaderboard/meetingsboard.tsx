@@ -5,59 +5,53 @@ import { db } from '../base/firebaseConfig';
 import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
 import { Button, Container } from 'react-bootstrap';
 
-const Meetingsboard: React.FC = () => {
-    interface User {
-        id: string;
-        score: number;
-        Name: string;
-        meetingsAttended?: number;
-    }
+interface User {
+    id: string;
+    score: number;
+    Name: string;
+    meetingsAttended?: number;
+}
 
-    interface Meeting {
-        id: string;
-        attendees?: string[];
-        [key: string]: any;
-    }
+interface Meeting {
+    id: string;
+    attendees?: string[];
+    [key: string]: any;
+}
 
+interface MeetingsboardProps {
+    usersData: any[];
+    meetingsData: any[];
+}
+
+const Meetingsboard: React.FC<MeetingsboardProps> = ({ usersData, meetingsData }) => {
     const [leaderboardData, setLeaderboardData] = React.useState<User[]>([]);
     const [meetings, setMeetings] = React.useState<Meeting[]>([]);
     const [isUpdating, setIsUpdating] = React.useState(false);
 
     useEffect(() => {
-        const fetchLeaderboard = async () => {
-            try {
-                const querySnapshot = await getDocs(collection(db, "Users"));
-                const fetchedData = querySnapshot.docs.map((d) => {
-                    const data = d.data() as any;
-                    return {
-                        id: d.id,
-                        score: data.score ?? 0,
-                        Name: data.Name ?? "",
-                        meetingsAttended: data.meetingsAttended ?? 0,
-                    } as User;
-                });
+        // Use provided data instead of fetching
+        const fetchedData = usersData.map((user) => ({
+            id: user.id,
+            score: user.score ?? 0,
+            Name: user.Name ?? "",
+            meetingsAttended: user.meetingsAttended ?? 0,
+        })) as User[];
 
-                // sort by meetingsAttended desc, fallback to score desc
-                fetchedData.sort((a, b) => {
-                    const ma = a.meetingsAttended ?? 0;
-                    const mb = b.meetingsAttended ?? 0;
-                    if (mb !== ma) return mb - ma;
-                    return (b.score ?? 0) - (a.score ?? 0);
-                });
-                setLeaderboardData(fetchedData);
+        // sort by meetingsAttended desc, fallback to score desc
+        fetchedData.sort((a, b) => {
+            const ma = a.meetingsAttended ?? 0;
+            const mb = b.meetingsAttended ?? 0;
+            if (mb !== ma) return mb - ma;
+            return (b.score ?? 0) - (a.score ?? 0);
+        });
+        setLeaderboardData(fetchedData);
 
-                const ms = await getDocs(collection(db, "meetings"));
-                const meetingsData = ms.docs.map((d) => ({
-                    id: d.id,
-                    ...(d.data() as any),
-                })) as Meeting[];
-                setMeetings(meetingsData);
-            } catch (error) {
-                console.error("Error fetching leaderboard/meetings:", error);
-            }
-        };
-        fetchLeaderboard();
-    }, []);
+        const meetingsData2 = meetingsData.map((meeting) => ({
+            id: meeting.id,
+            ...meeting,
+        })) as Meeting[];
+        setMeetings(meetingsData2);
+    }, [usersData, meetingsData]);
 
     async function upl(event: React.MouseEvent<HTMLButtonElement>) {
         try {

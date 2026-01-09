@@ -18,52 +18,27 @@ export interface Opportunity {
   signups: string[];
 }
 
-const Volbox: React.FC = () => {
+interface VolboxProps {
+  opportunities: any[];
+  users: any[];
+}
+
+const Volbox: React.FC<VolboxProps> = ({ opportunities: allOpportunities, users: allUsers }) => {
     
     const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
     const [allopportunities, setAllopportunities] = useState<Opportunity[]>([]);
-    const [loading, setLoading] = useState(true); 
+    const [loading, setLoading] = useState(false); 
     const navigate = useNavigate();
     const [Users, setUsers] = React.useState<any[]>([]);
     const { currentUser } = useAuth();
 
     useEffect(() => {
-        const fetchOpportunities = async () => {
-          setLoading(true); 
-          try {
-            const querySnapshot = await getDocs(collection(db, "opportunities")); 
-            const fetchedData = querySnapshot.docs.map((doc) => ({
-              id: doc.id, 
-              ...doc.data(), 
-            }));
-            
-            const UserQ = await getDocs(collection(db, "Users")); 
-            const UserF = UserQ.docs.map((doc) => ({
-              id: doc.id, 
-              ...doc.data(), 
-            }));
-            console.log(UserF);
-            setUsers(UserF);
-            const currentDate = new Date();
-            // setOpportunities(fetchedData);
-            setOpportunities(fetchedData.sort((a, b) => new Date(a.date) - new Date(b.date))); 
-          } catch (error) {
-            console.error("Error fetching opportunities:", error); 
-          }
-          setLoading(false); 
-        };
-        fetchOpportunities();
+        // Use provided data instead of fetching
+        setUsers(allUsers);
+        const currentDate = new Date();
+        setOpportunities(allOpportunities.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())); 
+    }, [allOpportunities, allUsers]);
 
-        
-    }, []);
-
-        if (loading) {
-            return (
-            <div className="box">
-            <p>Loading opportunities...</p>
-            </div>);
-          }
-          
           if (opportunities.length === 0) {
             return(
             <div className="box">
