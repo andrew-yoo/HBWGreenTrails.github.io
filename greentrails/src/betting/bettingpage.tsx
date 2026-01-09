@@ -14,6 +14,11 @@ interface Bet {
     creator: string;
     description: string;
     wager: number;
+    creatorOdds: number; // Multiplier for creator (e.g., 2 means 2:1 odds)
+    opponentOdds: number; // Multiplier for opponent
+    betType: 'fireworks_race' | 'leaderboard_position' | 'score_milestone';
+    targetValue?: number; // Target for milestone bets
+    deadline?: Date; // When to check the result
     status: 'open' | 'accepted' | 'completed';
     opponent?: string;
     winner?: string;
@@ -31,6 +36,11 @@ const BettingPage: React.FC = () => {
     // Create bet form state
     const [newBetDescription, setNewBetDescription] = useState('');
     const [newBetWager, setNewBetWager] = useState('');
+    const [newBetType, setNewBetType] = useState<'fireworks_race' | 'leaderboard_position' | 'score_milestone'>('fireworks_race');
+    const [creatorOdds, setCreatorOdds] = useState('2');
+    const [opponentOdds, setOpponentOdds] = useState('2');
+    const [targetValue, setTargetValue] = useState('');
+    const [deadline, setDeadline] = useState('');
 
     useEffect(() => {
         loadBets();
@@ -69,6 +79,11 @@ const BettingPage: React.FC = () => {
                     creator: data.creator,
                     description: data.description,
                     wager: data.wager,
+                    creatorOdds: data.creatorOdds || 2,
+                    opponentOdds: data.opponentOdds || 2,
+                    betType: data.betType || 'fireworks_race',
+                    targetValue: data.targetValue,
+                    deadline: data.deadline?.toDate(),
                     status: data.status,
                     opponent: data.opponent,
                     winner: data.winner,
@@ -94,6 +109,8 @@ const BettingPage: React.FC = () => {
         }
 
         const wager = parseInt(newBetWager);
+        const creatorOddsNum = parseFloat(creatorOdds);
+        const opponentOddsNum = parseFloat(opponentOdds);
         
         if (!newBetDescription.trim()) {
             showNotification("Please enter a bet description!", "error");
@@ -105,8 +122,23 @@ const BettingPage: React.FC = () => {
             return;
         }
 
+        if (isNaN(creatorOddsNum) || creatorOddsNum <= 0 || isNaN(opponentOddsNum) || opponentOddsNum <= 0) {
+            showNotification("Please enter valid odds!", "error");
+            return;
+        }
+
         if (wager > userFireworks) {
             showNotification(`Not enough fireworks! You have ${userFireworks} but need ${wager}.`, "error");
+            return;
+        }
+
+        if (newBetType === 'score_milestone' && (!targetValue || parseInt(targetValue) <= 0)) {
+            showNotification("Please enter a target value for milestone bets!", "error");
+            return;
+        }
+
+        if (!deadline) {
+            showNotification("Please set a deadline for the bet!", "error");
             return;
         }
 
@@ -136,14 +168,23 @@ const BettingPage: React.FC = () => {
                     creator: currentUser,
                     description: newBetDescription.trim(),
                     wager: wager,
+                    creatorOdds: creatorOddsNum,
+                    opponentOdds: opponentOddsNum,
+                    betType: newBetType,
+                    targetValue: targetValue ? parseInt(targetValue) : undefined,
+                    deadline: new Date(deadline),
                     status: 'open',
                     createdAt: new Date()
                 });
             });
 
-            showNotification(`Bet created! ${wager} fireworks wagered.`, "success");
+            showNotification(`Bet created with ${creatorOddsNum}:${opponentOddsNum} odds!`, "success");
             setNewBetDescription('');
             setNewBetWager('');
+            setCreatorOdds('2');
+            setOpponentOdds('2');
+            setTargetValue('');
+            setDeadline('');
             loadBets();
             loadUserFireworks();
         } catch (error) {
@@ -231,7 +272,7 @@ const BettingPage: React.FC = () => {
         }
     };
 
-    const declareSelfWinner = async (bet: Bet) => {
+    const resolveBet = async (bet: Bet) => {
         if (!currentUser) {
             showNotification("Please login!", "error");
             return;
@@ -242,12 +283,126 @@ const BettingPage: React.FC = () => {
             return;
         }
 
+        if (!bet.opponent) {
+            showNotification("Bet has not been accepted yet!", "error");
+            return;
+        }
+
         try {
-            // Use transaction to ensure atomicity
-            await runTransaction(db, async (transaction) => {
-                const winnerDocRef = doc(db, "Users", currentUser);
-                const betDocRef = doc(db, "bets", bet.id);
+            // Get current stats for both users
+            const creatorDocRef = doc(db, "Users", bet.creator);
+            const opponentDocRef = doc(db, "Users", bet.opponent);
+            
+            const [creatorDoc, opponentDoc] = await Promise.all([
+                getDoc(creatorDocRef),
+                getDoc(opponentDocRef)
+            ]);
+
+            if (!creatorDoc.exists() || !opponentDoc.exists()) {
+                showNotification("Error loading user data", "error");
+                return;
+            }
+
+            const creatorData = creatorDoc.data();
+            const opponentData = opponentDoc.data();
+
+            let winner = '';
+            let payout = 0;
+
+            // Determine winner based on bet type
+            if (bet.betType === 'fireworks_race') {
+                // Most fireworks wins
+                const creatorFireworks = creatorData.santasPopped || 0;
+                const opponentFireworks = opponentData.santasPopped || 0;
                 
+                if (creatorFireworks > opponentFireworks) {
+                    winner = bet.creator;
+                    payout = bet.wager * (1 + bet.creatorOdds);
+                } else if (opponentFireworks > creatorFireworks) {
+                    winner = bet.opponent;
+                    payout = bet.wager * (1 + bet.opponentOdds);
+                } else {
+                    // Tie - refund both
+                    showNotification("It's a tie! Both users refunded.", "info");
+                    await runTransaction(db, async (transaction) => {
+                        transaction.update(creatorDocRef, { santasPopped: increment(bet.wager) });
+                        transaction.update(opponentDocRef, { santasPopped: increment(bet.wager) });
+                        transaction.update(doc(db, "bets", bet.id), {
+                            status: 'completed',
+                            winner: 'tie',
+                            completedAt: new Date()
+                        });
+                    });
+                    loadBets();
+                    loadUserFireworks();
+                    return;
+                }
+            } else if (bet.betType === 'leaderboard_position') {
+                // Higher score wins
+                const creatorScore = creatorData.score || 0;
+                const opponentScore = opponentData.score || 0;
+                
+                if (creatorScore > opponentScore) {
+                    winner = bet.creator;
+                    payout = bet.wager * (1 + bet.creatorOdds);
+                } else if (opponentScore > creatorScore) {
+                    winner = bet.opponent;
+                    payout = bet.wager * (1 + bet.opponentOdds);
+                } else {
+                    // Tie - refund both
+                    showNotification("It's a tie! Both users refunded.", "info");
+                    await runTransaction(db, async (transaction) => {
+                        transaction.update(creatorDocRef, { santasPopped: increment(bet.wager) });
+                        transaction.update(opponentDocRef, { santasPopped: increment(bet.wager) });
+                        transaction.update(doc(db, "bets", bet.id), {
+                            status: 'completed',
+                            winner: 'tie',
+                            completedAt: new Date()
+                        });
+                    });
+                    loadBets();
+                    loadUserFireworks();
+                    return;
+                }
+            } else if (bet.betType === 'score_milestone') {
+                // First to reach target wins
+                const creatorScore = creatorData.score || 0;
+                const opponentScore = opponentData.score || 0;
+                const target = bet.targetValue || 0;
+                
+                const creatorReached = creatorScore >= target;
+                const opponentReached = opponentScore >= target;
+                
+                if (creatorReached && !opponentReached) {
+                    winner = bet.creator;
+                    payout = bet.wager * (1 + bet.creatorOdds);
+                } else if (opponentReached && !creatorReached) {
+                    winner = bet.opponent;
+                    payout = bet.wager * (1 + bet.opponentOdds);
+                } else if (creatorReached && opponentReached) {
+                    // Both reached - tie
+                    showNotification("Both reached the milestone! Refunded.", "info");
+                    await runTransaction(db, async (transaction) => {
+                        transaction.update(creatorDocRef, { santasPopped: increment(bet.wager) });
+                        transaction.update(opponentDocRef, { santasPopped: increment(bet.wager) });
+                        transaction.update(doc(db, "bets", bet.id), {
+                            status: 'completed',
+                            winner: 'tie',
+                            completedAt: new Date()
+                        });
+                    });
+                    loadBets();
+                    loadUserFireworks();
+                    return;
+                } else {
+                    showNotification("Neither user has reached the milestone yet!", "error");
+                    return;
+                }
+            }
+
+            // Award winnings using transaction
+            await runTransaction(db, async (transaction) => {
+                const betDocRef = doc(db, "bets", bet.id);
                 const betDoc = await transaction.get(betDocRef);
                 
                 if (!betDoc.exists()) {
@@ -256,44 +411,47 @@ const BettingPage: React.FC = () => {
                 
                 const betData = betDoc.data();
                 if (betData.status !== 'accepted') {
-                    throw new Error("Bet must be accepted before declaring winner");
+                    throw new Error("Bet must be accepted before resolving");
                 }
                 
                 if (betData.winner) {
                     throw new Error("Winner already declared");
                 }
                 
-                // Award winnings (2x wager to winner)
+                const winnerDocRef = doc(db, "Users", winner);
+                
+                // Award winnings to winner
                 transaction.update(winnerDocRef, {
-                    santasPopped: increment(bet.wager * 2)
+                    santasPopped: increment(payout)
                 });
                 
                 // Update bet document
                 transaction.update(betDocRef, {
-                    winner: currentUser,
+                    winner: winner,
                     status: 'completed',
                     completedAt: new Date()
                 });
             });
 
-            showNotification(`You won ${bet.wager * 2} fireworks!`, "success");
+            showNotification(`${winner} won ${payout} fireworks!`, "success");
             loadBets();
             loadUserFireworks();
         } catch (error) {
-            console.error("Error declaring winner:", error);
+            console.error("Error resolving bet:", error);
             if (error instanceof Error) {
-                if (error.message === "Bet must be accepted before declaring winner") {
+                if (error.message === "Bet must be accepted before resolving") {
                     showNotification("Bet must be accepted first", "error");
                 } else if (error.message === "Winner already declared") {
                     showNotification("Winner already declared for this bet", "error");
                 } else {
-                    showNotification("Error declaring winner", "error");
+                    showNotification("Error resolving bet", "error");
                 }
             } else {
-                showNotification("Error declaring winner", "error");
+                showNotification("Error resolving bet", "error");
             }
         }
     };
+
 
     const cancelBet = async (bet: Bet) => {
         if (!currentUser) {
@@ -403,24 +561,82 @@ const BettingPage: React.FC = () => {
                             <input
                                 type="text"
                                 className="bet-input"
-                                placeholder="What are you betting on? (e.g., 'I can do 50 pushups')"
+                                placeholder="Bet description (e.g., 'Race to 1000 fireworks')"
                                 value={newBetDescription}
                                 onChange={(e) => setNewBetDescription(e.target.value)}
                                 maxLength={200}
                             />
+                            
+                            <select 
+                                className="bet-input"
+                                value={newBetType}
+                                onChange={(e) => setNewBetType(e.target.value as any)}
+                            >
+                                <option value="fireworks_race">Fireworks Race (Most Fireworks Wins)</option>
+                                <option value="leaderboard_position">Leaderboard Position (Highest Score)</option>
+                                <option value="score_milestone">Score Milestone (First to Reach Target)</option>
+                            </select>
+
+                            {newBetType === 'score_milestone' && (
+                                <input
+                                    type="number"
+                                    className="bet-input"
+                                    placeholder="Target value (e.g., 1000)"
+                                    value={targetValue}
+                                    onChange={(e) => setTargetValue(e.target.value)}
+                                    min="1"
+                                />
+                            )}
+
                             <input
                                 type="number"
-                                className="bet-input"
-                                placeholder="Fireworks to wager"
+                                className="bet-input bet-input-small"
+                                placeholder="Your wager"
                                 value={newBetWager}
                                 onChange={(e) => setNewBetWager(e.target.value)}
                                 min="1"
                             />
+
+                            <div className="odds-container">
+                                <label>
+                                    Your Odds:
+                                    <input
+                                        type="number"
+                                        className="bet-input bet-input-small"
+                                        placeholder="2.0"
+                                        value={creatorOdds}
+                                        onChange={(e) => setCreatorOdds(e.target.value)}
+                                        min="0.1"
+                                        step="0.1"
+                                    />
+                                </label>
+                                <label>
+                                    Opponent Odds:
+                                    <input
+                                        type="number"
+                                        className="bet-input bet-input-small"
+                                        placeholder="2.0"
+                                        value={opponentOdds}
+                                        onChange={(e) => setOpponentOdds(e.target.value)}
+                                        min="0.1"
+                                        step="0.1"
+                                    />
+                                </label>
+                            </div>
+
+                            <input
+                                type="datetime-local"
+                                className="bet-input"
+                                placeholder="Deadline"
+                                value={deadline}
+                                onChange={(e) => setDeadline(e.target.value)}
+                            />
+
                             <button 
                                 className="btn-create-bet"
                                 onClick={createBet}
                             >
-                                Create Bet
+                                Create Odds-Based Bet
                             </button>
                         </div>
                     </div>
@@ -446,11 +662,29 @@ const BettingPage: React.FC = () => {
                                     
                                     <div className="bet-description">
                                         <p>{bet.description}</p>
+                                        <div className="bet-type">
+                                            <strong>Type:</strong> {bet.betType?.replace('_', ' ').toUpperCase()}
+                                            {bet.targetValue && <span> (Target: {bet.targetValue})</span>}
+                                        </div>
+                                        {bet.deadline && (
+                                            <div className="bet-deadline">
+                                                <strong>Deadline:</strong> {bet.deadline.toLocaleString()}
+                                            </div>
+                                        )}
                                     </div>
                                     
+                                    <div className="bet-odds">
+                                        <span>📊 Odds - {bet.creator}: <strong>{bet.creatorOdds}x</strong></span>
+                                        {bet.opponent && (
+                                            <span>📊 {bet.opponent}: <strong>{bet.opponentOdds}x</strong></span>
+                                        )}
+                                    </div>
+
                                     <div className="bet-wager">
                                         <span>🎆 Wager: <strong>{bet.wager}</strong> fireworks each</span>
-                                        <span className="bet-total">💰 Total pot: <strong>{bet.wager * 2}</strong></span>
+                                        <span className="bet-potential">
+                                            💰 Win: <strong>{Math.floor(bet.wager * (1 + (currentUser === bet.creator ? bet.creatorOdds : bet.opponentOdds)))}</strong>
+                                        </span>
                                     </div>
 
                                     {bet.opponent && (
@@ -459,9 +693,15 @@ const BettingPage: React.FC = () => {
                                         </div>
                                     )}
 
-                                    {bet.winner && bet.winner !== 'cancelled' && (
+                                    {bet.winner && bet.winner !== 'cancelled' && bet.winner !== 'tie' && (
                                         <div className="bet-winner">
                                             <span>🏆 Winner: {bet.winner}</span>
+                                        </div>
+                                    )}
+
+                                    {bet.winner === 'tie' && (
+                                        <div className="bet-cancelled">
+                                            <span>🤝 Tie - Both Refunded</span>
                                         </div>
                                     )}
 
@@ -477,7 +717,7 @@ const BettingPage: React.FC = () => {
                                                 className="btn-accept-bet"
                                                 onClick={() => acceptBet(bet)}
                                             >
-                                                Accept Bet
+                                                Accept Bet ({bet.opponentOdds}x odds)
                                             </button>
                                         )}
 
@@ -494,9 +734,9 @@ const BettingPage: React.FC = () => {
                                          (currentUser === bet.creator || currentUser === bet.opponent) && (
                                             <button 
                                                 className="btn-declare-winner"
-                                                onClick={() => declareSelfWinner(bet)}
+                                                onClick={() => resolveBet(bet)}
                                             >
-                                                I Won!
+                                                Resolve Bet (Check Winner)
                                             </button>
                                         )}
                                     </div>
@@ -511,13 +751,15 @@ const BettingPage: React.FC = () => {
                 </div>
 
                 <div className="betting-info">
-                    <h3>How Betting Works</h3>
+                    <h3>How Odds-Based Betting Works</h3>
                     <ul>
-                        <li>🎯 Create a bet with a description and fireworks wager</li>
-                        <li>🤝 Other users can accept your bet by matching the wager</li>
-                        <li>🏆 When the bet is decided, the winner claims the full pot (2x wager)</li>
-                        <li>⚠️ Both parties must agree on who won - use honor system!</li>
-                        <li>💡 You can cancel open bets to get your fireworks back</li>
+                        <li>🎯 Create a bet with odds (e.g., 2:1, 3:1) - higher odds mean bigger potential payout</li>
+                        <li>📊 Choose bet type: Fireworks Race, Leaderboard Position, or Score Milestone</li>
+                        <li>🤝 Other users accept bets by matching the wager at your offered odds</li>
+                        <li>🏆 Winners are determined automatically based on verifiable game stats</li>
+                        <li>⚡ No honor system - the code calculates winners objectively!</li>
+                        <li>💡 Cancel open bets anytime to get your fireworks back</li>
+                        <li>🎲 Example: Bet 100 fireworks at 2x odds = win 300 if you win (100 + 200)</li>
                     </ul>
                 </div>
             </div>

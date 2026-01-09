@@ -95,6 +95,41 @@
     flex: 0 0 180px;
 }
 
+.bet-input-small {
+    flex: 0 0 150px !important;
+    min-width: 150px !important;
+}
+
+.bet-input[type="datetime-local"] {
+    flex: 1;
+    min-width: 250px;
+}
+
+select.bet-input {
+    flex: 1;
+    min-width: 250px;
+}
+
+.odds-container {
+    display: flex;
+    gap: 15px;
+    flex: 1;
+    min-width: 300px;
+}
+
+.odds-container label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1;
+    font-weight: bold;
+    color: #555;
+}
+
+.odds-container label input {
+    flex: 1;
+}
+
 .btn-create-bet {
     padding: 12px 30px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -220,10 +255,37 @@
 }
 
 .bet-description p {
-    margin: 0;
+    margin: 0 0 10px 0;
     font-size: 1.05em;
     line-height: 1.5;
     color: #333;
+}
+
+.bet-type {
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 8px;
+}
+
+.bet-deadline {
+    font-size: 0.85em;
+    color: #e74c3c;
+    margin-top: 5px;
+}
+
+.bet-odds {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding: 10px;
+    background: #e3f2fd;
+    border-radius: 8px;
+    font-size: 0.95em;
+}
+
+.bet-odds strong {
+    color: #1976d2;
+    font-size: 1.1em;
 }
 
 .bet-wager {
@@ -235,6 +297,16 @@
 
 .bet-wager strong {
     color: #667eea;
+}
+
+.bet-potential {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.bet-potential strong {
+    color: #28a745;
+    font-size: 1.1em;
 }
 
 .bet-total {
