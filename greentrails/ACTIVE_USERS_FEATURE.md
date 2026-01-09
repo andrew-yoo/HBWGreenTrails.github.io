@@ -9,7 +9,7 @@ This feature displays a list of users who are currently active on the HBW Green 
 When a user logs in or is already logged in (via localStorage), the system automatically tracks their presence:
 
 1. **Initial Update**: When a user logs in, their `lastActive` timestamp is immediately updated in Firestore
-2. **Periodic Updates**: While the user remains logged in, their `lastActive` timestamp is updated every 5 minutes
+2. **Periodic Updates**: While the user remains logged in, their `lastActive` timestamp is updated every 8 minutes
 3. **Storage**: The timestamp is stored in the user's document in the `Users` collection as a Firestore Timestamp
 
 ### Active Users Display
@@ -23,7 +23,7 @@ The ActiveUsers component shows who is currently online:
 ## Database Impact (Minimal)
 
 ### Write Operations
-- **Per logged-in user**: 1 write every 5 minutes (12 writes/hour per active user)
+- **Per logged-in user**: 1 write every 8 minutes (7.5 writes/hour per active user)
 - **Cost**: Minimal - only updates a single timestamp field
 
 ### Read Operations
@@ -62,7 +62,7 @@ New field in Users collection documents:
 
 ### Configuration
 - **Active threshold**: 10 minutes (users shown if active within last 10 minutes)
-- **Presence update interval**: 5 minutes (how often timestamps are updated)
+- **Presence update interval**: 8 minutes (how often timestamps are updated)
 - **Display refresh interval**: 2 minutes (how often the list refreshes)
 
 These values can be adjusted in the code if needed to balance freshness vs. database costs.
