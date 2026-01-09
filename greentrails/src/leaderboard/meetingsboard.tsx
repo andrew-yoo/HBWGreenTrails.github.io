@@ -57,24 +57,34 @@ const Meetingsboard: React.FC<MeetingsboardProps> = ({ usersData, meetingsData }
         try {
             setIsUpdating(true);
 
-            const updatedUsers: User[] = await Promise.all(
-                leaderboardData.map(async (user) => {
-                    // count meetings where attendees includes the user name
-                    const count = meetings.reduce((acc, meeting) => {
-                        const attendees = Array.isArray(meeting.attendees) ? meeting.attendees : [];
-                        if (attendees.includes(user.Name)) {
-                            return acc + 1;
-                        }
-                        return acc;
-                    }, 0);
+            // Calculate counts for all users first
+            const userUpdates = leaderboardData.map((user) => {
+                // count meetings where attendees includes the user name
+                const count = meetings.reduce((acc, meeting) => {
+                    const attendees = Array.isArray(meeting.attendees) ? meeting.attendees : [];
+                    if (attendees.includes(user.Name)) {
+                        return acc + 1;
+                    }
+                    return acc;
+                }, 0);
 
-                    await updateDoc(doc(db, "Users", user.id), {
+                return { user, count };
+            });
+
+            // Batch update all users with Promise.all
+            await Promise.all(
+                userUpdates.map(({ user, count }) =>
+                    updateDoc(doc(db, "Users", user.id), {
                         meetingsAttended: count,
-                    });
-
-                    return { ...user, meetingsAttended: count };
-                })
+                    })
+                )
             );
+
+            // Update local state with new counts
+            const updatedUsers = userUpdates.map(({ user, count }) => ({
+                ...user,
+                meetingsAttended: count
+            }));
 
             // sort updated users by meetingsAttended desc, fallback to score desc
             updatedUsers.sort((a, b) => {

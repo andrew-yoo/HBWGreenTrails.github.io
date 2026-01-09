@@ -36,23 +36,33 @@ interface TableProps {
         }, [usersData, opportunitiesData]);
 
         function upl(event: React.MouseEvent<HTMLButtonElement>) {
-            let cur = 0;
+            // Calculate scores for all users first
+            const userScores = new Map<string, number>();
+            
             leaderboardData.forEach(user => {
+                let score = 0;
                 opportunities.forEach(opertunity => {
                     if (opertunity.signups.includes(user.id)) {
-                        cur += 1;
+                        score += 1;
                     }
-                    updateDoc(doc(db, "Users", user.id), {
-                        score: cur,
-                    });
                 });
-                cur=0;
-
+                userScores.set(user.id, score);
             });
-            // setTimeout(() => {
-            //     window.location.reload();
-            // }, 1000);
-            console.log('Done updating leaderboard');
+
+            // Batch update all users with Promise.all
+            const updatePromises = Array.from(userScores.entries()).map(([userId, score]) => 
+                updateDoc(doc(db, "Users", userId), {
+                    score: score,
+                })
+            );
+
+            Promise.all(updatePromises)
+                .then(() => {
+                    console.log('Done updating leaderboard');
+                })
+                .catch((error) => {
+                    console.error('Error updating leaderboard:', error);
+                });
         }
 
         return (
