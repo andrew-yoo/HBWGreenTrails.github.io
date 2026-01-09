@@ -10,7 +10,6 @@ import SantaLeaderboard from './santaboard';
 import {Cloudfooter} from '../componets/footer';
 import { db } from '../base/firebaseConfig';
 import { collection, getDocs } from "firebase/firestore";
-import ActiveUsers from '../componets/ActiveUsers';
 
     const Leaderboard: React.FC = () => {
         const [usersData, setUsersData] = useState<any[]>([]);
@@ -78,7 +77,6 @@ import ActiveUsers from '../componets/ActiveUsers';
                 
                 <Navbar />
                 <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', position: 'relative', zIndex: 1, justifyContent: 'center' }}>
-                <ActiveUsers />
                 <Table usersData={usersData} opportunitiesData={opportunitiesData} />
                 <Meetingsboard usersData={usersData} meetingsData={meetingsData} />
                 <SantaLeaderboard usersData={usersData} />
