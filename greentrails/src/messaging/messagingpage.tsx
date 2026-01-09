@@ -117,7 +117,7 @@ const MessagingPage: React.FC = () => {
                     )}
                 </div>
             </div>
-            <Cloudfooter />
+            
         </div>
     );
 };
