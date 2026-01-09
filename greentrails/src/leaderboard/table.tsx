@@ -8,61 +8,61 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { Button, Container } from 'react-bootstrap';
 
+interface User {
+    id: string;
+    score: number;
+    Name: string;
+}
+
+interface TableProps {
+    usersData: any[];
+    opportunitiesData: any[];
+}
 
     
-    const Table: React.FC = () => {
-        interface User {
-            id: string;
-            score: number;
-            Name: string;
-        }
-
+    const Table: React.FC<TableProps> = ({ usersData, opportunitiesData }) => {
         const [leaderboardData, setLeaderboardData] = React.useState<User[]>([]);
         const [opportunities, setOpportunities] = React.useState<any[]>([]);
 
         useEffect (() => {
-            const fetchLeaderboard = async () => {
-                try {
-                    const querySnapshot = await getDocs(collection(db, "Users"));
-                    const fetchedData = querySnapshot.docs.map((doc) => ({
-                        id: doc.id,
-                        score: doc.data().score,
-                        Name: doc.data().Name,
-                    })) as User[];
-                    setLeaderboardData(fetchedData.sort((a, b) => b.score - a.score));
-
-                    const qs = await getDocs(collection(db, "opportunities")); 
-                    const fd = qs.docs.map((doc) => ({
-                        id: doc.id, 
-                        ...doc.data(), 
-                    }));
-                    setOpportunities(fd);
-                } catch (error) {
-                    console.error("Error fetching leaderboard:", error);
-                }
-            };
-            fetchLeaderboard();
-
-        }, []);
+            // Use provided data instead of fetching
+            const fetchedData = usersData.map((user) => ({
+                id: user.id,
+                score: user.score || 0,
+                Name: user.Name || "",
+            })) as User[];
+            setLeaderboardData(fetchedData.sort((a, b) => b.score - a.score));
+            setOpportunities(opportunitiesData);
+        }, [usersData, opportunitiesData]);
 
         function upl(event: React.MouseEvent<HTMLButtonElement>) {
-            let cur = 0;
+            // Calculate scores for all users first
+            const userScores = new Map<string, number>();
+            
             leaderboardData.forEach(user => {
+                let score = 0;
                 opportunities.forEach(opertunity => {
                     if (opertunity.signups.includes(user.id)) {
-                        cur += 1;
+                        score += 1;
                     }
-                    updateDoc(doc(db, "Users", user.id), {
-                        score: cur,
-                    });
                 });
-                cur=0;
-
+                userScores.set(user.id, score);
             });
-            // setTimeout(() => {
-            //     window.location.reload();
-            // }, 1000);
-            console.log('Done updating leaderboard');
+
+            // Batch update all users with Promise.all
+            const updatePromises = Array.from(userScores.entries()).map(([userId, score]) => 
+                updateDoc(doc(db, "Users", userId), {
+                    score: score,
+                })
+            );
+
+            Promise.all(updatePromises)
+                .then(() => {
+                    console.log('Done updating leaderboard');
+                })
+                .catch((error) => {
+                    console.error('Error updating leaderboard:', error);
+                });
         }
 
         return (

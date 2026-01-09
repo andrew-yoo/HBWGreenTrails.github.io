@@ -4,35 +4,28 @@ import React, { useEffect } from 'react';
 import { db } from '../base/firebaseConfig';
 import { collection, getDocs } from "firebase/firestore";
 
-const SantaLeaderboard: React.FC = () => {
-    interface User {
-        id: string;
-        santasPopped: number;
-        Name: string;
-    }
+interface User {
+    id: string;
+    santasPopped: number;
+    Name: string;
+}
 
+interface SantaLeaderboardProps {
+    usersData: any[];
+}
+
+const SantaLeaderboard: React.FC<SantaLeaderboardProps> = ({ usersData }) => {
     const [leaderboardData, setLeaderboardData] = React.useState<User[]>([]);
 
     useEffect(() => {
-        const fetchLeaderboard = async () => {
-            try {
-                const querySnapshot = await getDocs(collection(db, "Users"));
-                const fetchedData = querySnapshot.docs.map((doc) => ({
-                    id: doc.id,
-                    santasPopped: doc.data().santasPopped || 0,
-                    Name: doc.data().Name,
-                })) as User[];
-                setLeaderboardData(fetchedData.sort((a, b) => b.santasPopped - a.santasPopped));
-            } catch (error) {
-                console.error("Error fetching santa leaderboard:", error);
-            }
-        };
-        fetchLeaderboard();
-
-        // Refresh leaderboard every 5 seconds
-        const interval = setInterval(fetchLeaderboard, 5000);
-        return () => clearInterval(interval);
-    }, []);
+        // Use provided data instead of fetching
+        const fetchedData = usersData.map((user) => ({
+            id: user.id,
+            santasPopped: user.santasPopped || 0,
+            Name: user.Name || "",
+        })) as User[];
+        setLeaderboardData(fetchedData.sort((a, b) => b.santasPopped - a.santasPopped));
+    }, [usersData]);
 
     return (
         <div id='santa-table'>
