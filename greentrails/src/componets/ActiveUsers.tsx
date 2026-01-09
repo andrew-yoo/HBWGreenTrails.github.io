@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { db } from '../base/firebaseConfig';
-import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import '../styles/activeusers.css';
 
 interface ActiveUser {
@@ -17,6 +17,8 @@ const ActiveUsers: React.FC = () => {
             // Consider users active if they've been active in the last 10 minutes
             const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
             
+            // Note: We fetch all users to avoid needing a Firestore index on lastActive
+            // This is acceptable since the leaderboard already fetches all users
             const usersSnapshot = await getDocs(collection(db, "Users"));
             
             const active: ActiveUser[] = [];
