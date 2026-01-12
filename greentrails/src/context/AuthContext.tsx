@@ -56,10 +56,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Update presence immediately
         updateUserPresence(currentUser);
 
-        // Update presence every 5 minutes to keep user marked as active
+        // Update presence every 8 minutes to keep user marked as active
         const interval = setInterval(() => {
             updateUserPresence(currentUser);
-        }, 5 * 60 * 1000); // 5 minutes
+        }, 8 * 60 * 1000); // 8 minutes
 
         return () => clearInterval(interval);
     }, [currentUser]);
