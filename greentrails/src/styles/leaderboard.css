@@ -15,7 +15,6 @@
     margin: 0px;
 }
 .boardcon{
-    
     /* border-radius: 15%; */
     border: 2px solid #FFA500; /* Orange/gold border */
     overflow-y: auto;
@@ -29,7 +28,6 @@
 
 .leaderboards-container {
     display: flex;
-    flex-direction: row;
     flex-wrap: nowrap;
     position: relative;
     z-index: 1;
