@@ -19,9 +19,10 @@
     /* border-radius: 15%; */
     border: 2px solid #FFA500; /* Orange/gold border */
     overflow-y: scroll;
-    max-width: 30vw;
-    min-width: fit-content;
+    max-width: 28vw;
+    min-width: 250px;
     height: 50vh;
+    margin: 0 10px;
 }
 
 #events-table{

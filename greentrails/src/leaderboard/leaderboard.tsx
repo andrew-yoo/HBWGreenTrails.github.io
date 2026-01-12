@@ -76,7 +76,7 @@ import { collection, getDocs } from "firebase/firestore";
                 <Top message="Leaderboards" shadow={true} />
                 
                 <Navbar />
-                <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', position: 'relative', zIndex: 1, justifyContent: 'center' }}>
+                <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', position: 'relative', zIndex: 1, justifyContent: 'center', gap: '10px', padding: '20px' }}>
                 <Table usersData={usersData} opportunitiesData={opportunitiesData} />
                 <Meetingsboard usersData={usersData} meetingsData={meetingsData} />
                 <SantaLeaderboard usersData={usersData} />
