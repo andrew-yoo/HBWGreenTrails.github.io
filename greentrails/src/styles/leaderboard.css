@@ -19,10 +19,12 @@
     /* border-radius: 15%; */
     border: 2px solid #FFA500; /* Orange/gold border */
     overflow-y: scroll;
-    max-width: 28vw;
+    width: 100%;
+    max-width: 350px;
     min-width: 250px;
     height: 50vh;
-    margin: 0 10px;
+    margin: 0 5px;
+    flex-shrink: 1;
 }
 
 #events-table{
