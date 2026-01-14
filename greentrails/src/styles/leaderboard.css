@@ -15,13 +15,29 @@
     margin: 0px;
 }
 .boardcon{
-    
     /* border-radius: 15%; */
     border: 2px solid #FFA500; /* Orange/gold border */
-    overflow-y: scroll;
-    max-width: 30vw;
-    min-width: fit-content;
+    overflow-y: auto;
+    width: 100%;
+    max-width: 350px;
+    min-width: 250px;
     height: 50vh;
+    max-height: 600px;
+    margin: 0 5px;
+    flex-shrink: 1;
+}
+
+.leaderboards-container {
+    display: flex;
+    flex-wrap: nowrap;
+    position: relative;
+    z-index: 1;
+    justify-content: center;
+    gap: 15px;
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+    overflow-x: auto;
 }
 
 #events-table{
