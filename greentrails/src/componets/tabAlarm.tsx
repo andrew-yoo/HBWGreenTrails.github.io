@@ -35,8 +35,7 @@ const TabAlarm: React.FC = () => {
     const isPlayingRef = useRef<boolean>(false);
     const voiceIntervalRef = useRef<number | null>(null);
     const [isMultipleTabsOpen, setIsMultipleTabsOpen] = useState(false);
-    const tabIdRef = useRef<string>(Math.random().toString(36).substring(2, 15));
-    const channelRef = useRef<BroadcastChannel | null>(null);
+    const tabIdRef = useRef<string>(`${Date.now()}-${Math.random().toString(36).substring(2, 15)}`);
     const heartbeatIntervalRef = useRef<number | null>(null);
 
     const speakMessage = () => {
@@ -273,7 +272,14 @@ const TabAlarm: React.FC = () => {
                     Please close this tab and return to your other Green Trails tab.
                 </p>
                 <button
-                    onClick={() => window.close()}
+                    onClick={() => {
+                        // Try to close the tab - this only works for script-opened windows
+                        window.close();
+                        // If close doesn't work, provide instructions
+                        setTimeout(() => {
+                            alert('Please manually close this tab using your browser controls (Ctrl+W or Cmd+W, or click the X button on the tab).');
+                        }, 500);
+                    }}
                     style={{
                         padding: '15px 30px',
                         fontSize: '1.2em',
