@@ -21,6 +21,7 @@ interface UserData {
     luckyClickLevel: number;
     goldRushLevel: number;
     clickMultiplierLevel: number;
+    prestigeStartingBonus: number;
 }
 
 const PrestigePage: React.FC = () => {
@@ -62,7 +63,8 @@ const PrestigePage: React.FC = () => {
                     santaWorthLevel: data.santaWorthLevel || 0,
                     luckyClickLevel: data.luckyClickLevel || 0,
                     goldRushLevel: data.goldRushLevel || 0,
-                    clickMultiplierLevel: data.clickMultiplierLevel || 0
+                    clickMultiplierLevel: data.clickMultiplierLevel || 0,
+                    prestigeStartingBonus: data.prestigeStartingBonus || 0
                 });
             }
         } catch (error) {
@@ -111,19 +113,22 @@ const PrestigePage: React.FC = () => {
                 const totalPrestigePoints = (currentData.prestigePoints || 0) + newPrestigePoints;
                 const newPrestigeLevel = (currentData.prestigeLevel || 0) + 1;
                 const newTotalAllTime = (currentData.totalFireworksAllTime || 0) + currentFireworks;
+                
+                // Get starting bonus level (free upgrade levels after prestige)
+                const startingBonusLevel = currentData.prestigeStartingBonus || 0;
 
-                // Update user document - reset upgrades, keep prestige
+                // Update user document - reset upgrades to starting bonus level, keep prestige
                 transaction.update(userDocRef, {
                     prestigeLevel: newPrestigeLevel,
                     prestigePoints: totalPrestigePoints,
                     totalFireworksAllTime: newTotalAllTime,
                     santasPopped: 0,
-                    autoClickerLevel: 0,
-                    spawnSpeedLevel: 0,
-                    santaWorthLevel: 0,
-                    luckyClickLevel: 0,
-                    goldRushLevel: 0,
-                    clickMultiplierLevel: 0
+                    autoClickerLevel: startingBonusLevel,
+                    spawnSpeedLevel: startingBonusLevel,
+                    santaWorthLevel: startingBonusLevel,
+                    luckyClickLevel: startingBonusLevel,
+                    goldRushLevel: startingBonusLevel,
+                    clickMultiplierLevel: startingBonusLevel
                 });
 
                 // Update local state
@@ -132,12 +137,12 @@ const PrestigePage: React.FC = () => {
                     prestigeLevel: newPrestigeLevel,
                     prestigePoints: totalPrestigePoints,
                     totalFireworksAllTime: newTotalAllTime,
-                    autoClickerLevel: 0,
-                    spawnSpeedLevel: 0,
-                    santaWorthLevel: 0,
-                    luckyClickLevel: 0,
-                    goldRushLevel: 0,
-                    clickMultiplierLevel: 0
+                    autoClickerLevel: startingBonusLevel,
+                    spawnSpeedLevel: startingBonusLevel,
+                    santaWorthLevel: startingBonusLevel,
+                    luckyClickLevel: startingBonusLevel,
+                    goldRushLevel: startingBonusLevel,
+                    clickMultiplierLevel: startingBonusLevel
                 });
             });
 
@@ -479,7 +484,11 @@ const PrestigePage: React.FC = () => {
                                 Are you sure you want to prestige? This will:
                             </p>
                             <ul style={{ color: '#d32f2f', fontSize: '16px', marginBottom: '20px', paddingLeft: '30px' }}>
-                                <li>Reset all shop upgrades to level 0</li>
+                                {(userData?.prestigeStartingBonus || 0) > 0 ? (
+                                    <li>Reset all shop upgrades to level {userData?.prestigeStartingBonus || 0} (Starting Bonus)</li>
+                                ) : (
+                                    <li>Reset all shop upgrades to level 0</li>
+                                )}
                                 <li>Reset your fireworks to 0</li>
                             </ul>
                             <p style={{ fontSize: '18px', color: '#2e7d32', marginBottom: '30px', fontWeight: 'bold' }}>
