@@ -35,6 +35,7 @@ const TabAlarm: React.FC = () => {
     const isPlayingRef = useRef<boolean>(false);
     const voiceIntervalRef = useRef<number | null>(null);
     const [isMultipleTabsOpen, setIsMultipleTabsOpen] = useState(false);
+    const [showCloseInstructions, setShowCloseInstructions] = useState(false);
     const tabIdRef = useRef<string>(`${Date.now()}-${Math.random().toString(36).substring(2, 15)}`);
     const heartbeatIntervalRef = useRef<number | null>(null);
 
@@ -271,30 +272,42 @@ const TabAlarm: React.FC = () => {
                 <p style={{ fontSize: '1.2em', marginBottom: '30px', maxWidth: '600px' }}>
                     Please close this tab and return to your other Green Trails tab.
                 </p>
-                <button
-                    onClick={() => {
-                        // Try to close the tab - this only works for script-opened windows
-                        window.close();
-                        // If close doesn't work, provide instructions
-                        setTimeout(() => {
-                            alert('Please manually close this tab using your browser controls (Ctrl+W or Cmd+W, or click the X button on the tab).');
-                        }, 500);
-                    }}
-                    style={{
+                {!showCloseInstructions ? (
+                    <button
+                        onClick={() => {
+                            // Try to close the tab
+                            window.close();
+                            // Show instructions after a short delay if tab is still open
+                            setTimeout(() => setShowCloseInstructions(true), 500);
+                        }}
+                        style={{
+                            padding: '15px 30px',
+                            fontSize: '1.2em',
+                            backgroundColor: '#4CAF50',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '5px',
+                            cursor: 'pointer',
+                            transition: 'background-color 0.3s'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#45a049'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4CAF50'}
+                    >
+                        Close This Tab
+                    </button>
+                ) : (
+                    <p style={{ 
+                        fontSize: '1.1em', 
+                        maxWidth: '600px',
                         padding: '15px 30px',
-                        fontSize: '1.2em',
-                        backgroundColor: '#4CAF50',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '5px',
-                        cursor: 'pointer',
-                        transition: 'background-color 0.3s'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#45a049'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4CAF50'}
-                >
-                    Close This Tab
-                </button>
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                        borderRadius: '5px'
+                    }}>
+                        Please manually close this tab using:<br/>
+                        <strong>Ctrl+W</strong> (Windows/Linux) or <strong>Cmd+W</strong> (Mac)<br/>
+                        or click the <strong>X</strong> button on the tab.
+                    </p>
+                )}
             </div>
         );
     }
