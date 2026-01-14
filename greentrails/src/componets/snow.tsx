@@ -96,12 +96,27 @@ export default function Snow({
     const [luckyClickLevel, setLuckyClickLevel] = useState(0);
     const [goldRushLevel, setGoldRushLevel] = useState(0);
     const [clickMultiplierLevel, setClickMultiplierLevel] = useState(0);
+    
+    // Store prestige bonuses
+    const [prestigeFireworkMultiplier, setPrestigeFireworkMultiplier] = useState(0);
+    const [prestigeAutoClickerBoost, setPrestigeAutoClickerBoost] = useState(0);
+    const [prestigeSpawnBoost, setPrestigeSpawnBoost] = useState(0);
+    const [prestigeLuckyBoost, setPrestigeLuckyBoost] = useState(0);
+    const [prestigeGoldBoost, setPrestigeGoldBoost] = useState(0);
+    
     const autoClickerLevelRef = useRef(0);
     const spawnSpeedLevelRef = useRef(0);
     const santaWorthLevelRef = useRef(0);
     const luckyClickLevelRef = useRef(0);
     const goldRushLevelRef = useRef(0);
     const clickMultiplierLevelRef = useRef(0);
+    
+    // Refs for prestige bonuses
+    const prestigeFireworkMultiplierRef = useRef(0);
+    const prestigeAutoClickerBoostRef = useRef(0);
+    const prestigeSpawnBoostRef = useRef(0);
+    const prestigeLuckyBoostRef = useRef(0);
+    const prestigeGoldBoostRef = useRef(0);
     
     // Update ref whenever currentUser changes
     useEffect(() => {
@@ -135,7 +150,12 @@ export default function Snow({
         luckyClickLevelRef.current = luckyClickLevel;
         goldRushLevelRef.current = goldRushLevel;
         clickMultiplierLevelRef.current = clickMultiplierLevel;
-    }, [autoClickerLevel, spawnSpeedLevel, santaWorthLevel, luckyClickLevel, goldRushLevel, clickMultiplierLevel]);
+        prestigeFireworkMultiplierRef.current = prestigeFireworkMultiplier;
+        prestigeAutoClickerBoostRef.current = prestigeAutoClickerBoost;
+        prestigeSpawnBoostRef.current = prestigeSpawnBoost;
+        prestigeLuckyBoostRef.current = prestigeLuckyBoost;
+        prestigeGoldBoostRef.current = prestigeGoldBoost;
+    }, [autoClickerLevel, spawnSpeedLevel, santaWorthLevel, luckyClickLevel, goldRushLevel, clickMultiplierLevel, prestigeFireworkMultiplier, prestigeAutoClickerBoost, prestigeSpawnBoost, prestigeLuckyBoost, prestigeGoldBoost]);
     
     const loadUserUpgrades = async () => {
         if (!currentUser) return;
@@ -152,12 +172,26 @@ export default function Snow({
                 const luckyLevel = userData.luckyClickLevel || 0;
                 const goldLevel = userData.goldRushLevel || 0;
                 const multiplierLevel = userData.clickMultiplierLevel || 0;
+                
+                // Load prestige bonuses
+                const prestigeFirework = userData.prestigeFireworkMultiplier || 0;
+                const prestigeAutoClicker = userData.prestigeAutoClickerBoost || 0;
+                const prestigeSpawn = userData.prestigeSpawnBoost || 0;
+                const prestigeLucky = userData.prestigeLuckyBoost || 0;
+                const prestigeGold = userData.prestigeGoldBoost || 0;
+                
                 setAutoClickerLevel(autoLevel);
                 setSpawnSpeedLevel(spawnLevel);
                 setSantaWorthLevel(worthLevel);
                 setLuckyClickLevel(luckyLevel);
                 setGoldRushLevel(goldLevel);
                 setClickMultiplierLevel(multiplierLevel);
+                
+                setPrestigeFireworkMultiplier(prestigeFirework);
+                setPrestigeAutoClickerBoost(prestigeAutoClicker);
+                setPrestigeSpawnBoost(prestigeSpawn);
+                setPrestigeLuckyBoost(prestigeLucky);
+                setPrestigeGoldBoost(prestigeGold);
                 console.log('Loaded upgrades:', { 
                     autoLevel, 
                     spawnLevel, 
@@ -183,8 +217,11 @@ export default function Snow({
         }
         
         // Lucky Click: Chance per level for double points
-        const luckyChance = luckyClickLevelRef.current * LUCKY_CLICK_CHANCE_PER_LEVEL;
-        if (Math.random() < luckyChance) {
+        // Add prestige lucky boost (+5% per level)
+        const baseLuckyChance = luckyClickLevelRef.current * LUCKY_CLICK_CHANCE_PER_LEVEL;
+        const prestigeLuckyChance = prestigeLuckyBoostRef.current * 0.05; // +5% per level
+        const totalLuckyChance = baseLuckyChance + prestigeLuckyChance;
+        if (Math.random() < totalLuckyChance) {
             points *= LUCKY_CLICK_MULTIPLIER;
             isLucky = true;
         }
@@ -192,6 +229,10 @@ export default function Snow({
         // Click Multiplier: Applies (1 + level * factor)x multiplier to all clicks
         const clickMultiplier = 1 + (clickMultiplierLevelRef.current * CLICK_MULTIPLIER_PER_LEVEL);
         points = Math.round(points * clickMultiplier);
+        
+        // Apply prestige firework multiplier (+10% per level)
+        const prestigeMultiplier = 1 + (prestigeFireworkMultiplierRef.current * 0.10);
+        points = Math.round(points * prestigeMultiplier);
         
         return { points, isLucky };
     };
@@ -377,8 +418,12 @@ export default function Snow({
             const vx = (2 + Math.random() * 2) * (dir === 1 ? 1 : -1) * Math.max(0.5, speed);
             
             // Gold Rush: Determine if this firework should be golden
-            const goldRushChance = goldRushLevelRef.current * GOLD_RUSH_CHANCE_PER_LEVEL;
-            const isGolden = Math.random() < goldRushChance;
+            // Base: goldRushLevel * 3% chance
+            // Add prestige gold boost: +5% per level
+            const baseGoldChance = goldRushLevelRef.current * GOLD_RUSH_CHANCE_PER_LEVEL;
+            const prestigeGoldChance = prestigeGoldBoostRef.current * 0.05;
+            const totalGoldChance = baseGoldChance + prestigeGoldChance;
+            const isGolden = Math.random() < totalGoldChance;
             
             const firework: Firework = {
                 x: startX,
@@ -503,9 +548,12 @@ export default function Snow({
 
         // Calculate spawn interval based on spawn speed level
         // Base: 5000ms, each level reduces by 20% (multiply by 0.8)
+        // Apply prestige spawn boost: +15% per level = multiply by (1 - 0.15 * prestigeLevel)
         const spawnSpeed = spawnSpeedLevelRef.current;
-        const spawnInterval = Math.max(MIN_SPAWN_INTERVAL, BASE_SPAWN_INTERVAL * Math.pow(SPAWN_SPEED_REDUCTION_FACTOR, spawnSpeed));
-        console.log('Firework spawn interval:', spawnInterval, 'ms (level', spawnSpeed, ')');
+        const prestigeSpawnMultiplier = Math.pow(0.85, prestigeSpawnBoostRef.current); // 15% reduction per level
+        const baseSpawnInterval = Math.max(MIN_SPAWN_INTERVAL, BASE_SPAWN_INTERVAL * Math.pow(SPAWN_SPEED_REDUCTION_FACTOR, spawnSpeed));
+        const spawnInterval = Math.max(MIN_SPAWN_INTERVAL, baseSpawnInterval * prestigeSpawnMultiplier);
+        console.log('Firework spawn interval:', spawnInterval, 'ms (level', spawnSpeed, ', prestige boost:', prestigeSpawnBoostRef.current, ')');
 
         // spawn first firework after 1s, then at calculated interval
         spawnIntervalRef.current = window.setInterval(spawnFirework, spawnInterval);
@@ -514,9 +562,12 @@ export default function Snow({
         // Auto-clicker setup
         // Only start if auto-clicker level > 0
         // Interval: 10s, 8s, 6s, 4s, 2s for levels 1-5
+        // Apply prestige auto-clicker boost: +20% speed = multiply by (1 - 0.20 * prestigeLevel)
         if (autoClickerLevelRef.current > 0) {
-            const autoClickInterval = Math.max(MIN_AUTO_CLICK_INTERVAL, BASE_AUTO_CLICK_INTERVAL - autoClickerLevelRef.current * AUTO_CLICK_LEVEL_REDUCTION);
-            console.log('Auto-clicker active! Interval:', autoClickInterval, 'ms (level', autoClickerLevelRef.current, ')');
+            const baseAutoClickInterval = Math.max(MIN_AUTO_CLICK_INTERVAL, BASE_AUTO_CLICK_INTERVAL - autoClickerLevelRef.current * AUTO_CLICK_LEVEL_REDUCTION);
+            const prestigeAutoMultiplier = Math.pow(0.80, prestigeAutoClickerBoostRef.current); // 20% speed increase per level
+            const autoClickInterval = Math.max(MIN_AUTO_CLICK_INTERVAL, baseAutoClickInterval * prestigeAutoMultiplier);
+            console.log('Auto-clicker active! Interval:', autoClickInterval, 'ms (level', autoClickerLevelRef.current, ', prestige boost:', prestigeAutoClickerBoostRef.current, ')');
             
             autoClickerIntervalRef.current = window.setInterval(() => {
                 const fireworks = fireworkSpritesRef.current;
