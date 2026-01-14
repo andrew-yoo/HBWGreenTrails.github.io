@@ -141,7 +141,7 @@ const PrestigePage: React.FC = () => {
                 });
             });
 
-            showNotification(`Prestige successful! You are now Prestige Level ${userData.prestigeLevel + 1}!`, "success");
+            showNotification(`Prestige successful! You are now Prestige Level ${newPrestigeLevel}!`, "success");
             setShowConfirmation(false);
         } catch (error) {
             console.error("Error prestiging:", error);

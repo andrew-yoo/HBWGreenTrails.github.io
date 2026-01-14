@@ -121,11 +121,16 @@ const PrestigeShop: React.FC = () => {
 
                 transaction.update(userDocRef, updateData);
 
-                // Update local state
+                // Update local state using fresh transaction data
                 setUpgrades({
-                    ...upgrades,
                     prestigePoints: currentPoints - cost,
-                    [upgradeType]: currentLevel + 1
+                    prestigeLevel: currentData.prestigeLevel || 0,
+                    prestigeFireworkMultiplier: upgradeType === 'prestigeFireworkMultiplier' ? currentLevel + 1 : currentData.prestigeFireworkMultiplier || 0,
+                    prestigeAutoClickerBoost: upgradeType === 'prestigeAutoClickerBoost' ? currentLevel + 1 : currentData.prestigeAutoClickerBoost || 0,
+                    prestigeSpawnBoost: upgradeType === 'prestigeSpawnBoost' ? currentLevel + 1 : currentData.prestigeSpawnBoost || 0,
+                    prestigeStartingBonus: upgradeType === 'prestigeStartingBonus' ? currentLevel + 1 : currentData.prestigeStartingBonus || 0,
+                    prestigeLuckyBoost: upgradeType === 'prestigeLuckyBoost' ? currentLevel + 1 : currentData.prestigeLuckyBoost || 0,
+                    prestigeGoldBoost: upgradeType === 'prestigeGoldBoost' ? currentLevel + 1 : currentData.prestigeGoldBoost || 0
                 } as PrestigeUpgrades);
             });
             
