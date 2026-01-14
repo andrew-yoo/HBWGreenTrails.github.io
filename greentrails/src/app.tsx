@@ -9,6 +9,8 @@ import Signup from './signup_page/signup';
 import SantaUpgrades from './santa/santaupgrades';
 import BettingPage from './betting/bettingpage';
 import MessagingPage from './messaging/messagingpage';
+import PrestigePage from './prestige/prestigepage';
+import PrestigeShop from './prestige/prestigeshop';
 import Icon from './componets/icon'
 import Snow from './componets/snow';
 import TabAlarm from './componets/tabAlarm';
@@ -37,6 +39,8 @@ const App: React.FC = () => {
                         <Route path="/messaging/*" element={<MessagingPage />} />
                         <Route path="/santa/*" element={<SantaUpgrades />} />
                         <Route path="/betting/*" element={<BettingPage />} />
+                        <Route path="/prestige/*" element={<PrestigePage />} />
+                        <Route path="/prestigeshop/*" element={<PrestigeShop />} />
                     </Routes>
                 </Router>
             </div>
