@@ -9,6 +9,7 @@ import Top from '../componets/header';
 import { Cloudfooter } from '../componets/footer';
 import { showNotification } from '../componets/Notification';
 import ActiveUsers from '../componets/ActiveUsers';
+import { useNavigate } from 'react-router-dom';
 
 interface UserUpgrades {
     autoClickerLevel: number;
@@ -18,10 +19,13 @@ interface UserUpgrades {
     luckyClickLevel: number;
     goldRushLevel: number;
     clickMultiplierLevel: number;
+    prestigeLevel: number;
+    prestigePoints: number;
 }
 
 const SantaUpgrades: React.FC = () => {
     const { currentUser } = useAuth();
+    const navigate = useNavigate();
     const [upgrades, setUpgrades] = useState<UserUpgrades>({
         autoClickerLevel: 0,
         spawnSpeedLevel: 0,
@@ -29,7 +33,9 @@ const SantaUpgrades: React.FC = () => {
         santasPopped: 0,
         luckyClickLevel: 0,
         goldRushLevel: 0,
-        clickMultiplierLevel: 0
+        clickMultiplierLevel: 0,
+        prestigeLevel: 0,
+        prestigePoints: 0
     });
     const [loading, setLoading] = useState(true);
 
@@ -86,7 +92,9 @@ const SantaUpgrades: React.FC = () => {
                     santasPopped: userData.santasPopped || 0,
                     luckyClickLevel: userData.luckyClickLevel || 0,
                     goldRushLevel: userData.goldRushLevel || 0,
-                    clickMultiplierLevel: userData.clickMultiplierLevel || 0
+                    clickMultiplierLevel: userData.clickMultiplierLevel || 0,
+                    prestigeLevel: userData.prestigeLevel || 0,
+                    prestigePoints: userData.prestigePoints || 0
                 });
             }
         } catch (error) {
@@ -442,6 +450,86 @@ const SantaUpgrades: React.FC = () => {
                                 {upgrades.santaWorthLevel + 1}x
                             </p>
                         </div>
+                        <div style={{ 
+                            textAlign: 'center',
+                            padding: '15px 30px',
+                            backgroundColor: '#f3e5f5',
+                            borderRadius: '10px',
+                            border: '2px solid #9c27b0'
+                        }}>
+                            <p style={{ fontSize: '20px', marginBottom: '8px', color: '#666' }}>🌟 Prestige Level</p>
+                            <p style={{ fontSize: '36px', fontWeight: 'bold', color: '#9c27b0', margin: 0 }}>
+                                {upgrades.prestigeLevel}
+                            </p>
+                        </div>
+                        <div style={{ 
+                            textAlign: 'center',
+                            padding: '15px 30px',
+                            backgroundColor: '#e8f5e9',
+                            borderRadius: '10px',
+                            border: '2px solid #388e3c'
+                        }}>
+                            <p style={{ fontSize: '20px', marginBottom: '8px', color: '#666' }}>💎 Prestige Points</p>
+                            <p style={{ fontSize: '36px', fontWeight: 'bold', color: '#388e3c', margin: 0 }}>
+                                {upgrades.prestigePoints}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    {/* Prestige Buttons */}
+                    <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'center', 
+                        gap: '15px',
+                        marginTop: '25px',
+                        flexWrap: 'wrap'
+                    }}>
+                        <button
+                            onClick={() => navigate('/prestige')}
+                            style={{
+                                padding: '12px 30px',
+                                fontSize: '16px',
+                                fontWeight: 'bold',
+                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '10px',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s',
+                                boxShadow: '0 4px 8px rgba(102, 126, 234, 0.3)'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.transform = 'scale(1.05)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = 'scale(1)';
+                            }}
+                        >
+                            🌟 Prestige System
+                        </button>
+                        <button
+                            onClick={() => navigate('/prestigeshop')}
+                            style={{
+                                padding: '12px 30px',
+                                fontSize: '16px',
+                                fontWeight: 'bold',
+                                background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '10px',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s',
+                                boxShadow: '0 4px 8px rgba(245, 87, 108, 0.3)'
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.transform = 'scale(1.05)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = 'scale(1)';
+                            }}
+                        >
+                            💎 Prestige Shop
+                        </button>
                     </div>
                 </div>
 

@@ -8,6 +8,7 @@ interface User {
     id: string;
     santasPopped: number;
     Name: string;
+    prestigeLevel: number;
 }
 
 interface SantaLeaderboardProps {
@@ -23,6 +24,7 @@ const SantaLeaderboard: React.FC<SantaLeaderboardProps> = ({ usersData }) => {
             id: user.id,
             santasPopped: user.santasPopped || 0,
             Name: user.Name || "",
+            prestigeLevel: user.prestigeLevel || 0,
         })) as User[];
         setLeaderboardData(fetchedData.sort((a, b) => b.santasPopped - a.santasPopped));
     }, [usersData]);
@@ -34,7 +36,22 @@ const SantaLeaderboard: React.FC<SantaLeaderboardProps> = ({ usersData }) => {
                 {leaderboardData.map((user, index) => (
                     <div className='lbentrie' key={user.id}>
                         <p className='place'>{index+1}.</p>
-                        <p className='username'>{user.Name}</p>
+                        <p className='username'>
+                            {user.Name}
+                            {user.prestigeLevel > 0 && (
+                                <span style={{ 
+                                    marginLeft: '8px',
+                                    padding: '2px 8px',
+                                    backgroundColor: '#9c27b0',
+                                    color: 'white',
+                                    borderRadius: '10px',
+                                    fontSize: '12px',
+                                    fontWeight: 'bold'
+                                }}>
+                                    🌟{user.prestigeLevel}
+                                </span>
+                            )}
+                        </p>
                         <p className='userscore'>{user.santasPopped}</p>
                         <p className='username'>  </p>
                     </div>
