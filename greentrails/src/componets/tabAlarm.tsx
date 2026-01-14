@@ -1,10 +1,17 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 // ============================================
 // TAB ALARM CONFIGURATION
 // Set this to false to disable the tab alarm
 // ============================================
-const TAB_ALARM_ENABLED = false;
+const TAB_ALARM_ENABLED = true;
+// ============================================
+
+// ============================================
+// MULTIPLE TAB DETECTION CONFIGURATION
+// Set this to false to allow multiple tabs
+// ============================================
+const PREVENT_MULTIPLE_TABS = true;
 // ============================================
 
 // Alarm sound settings
@@ -27,6 +34,10 @@ const TabAlarm: React.FC = () => {
     const gainNodeRef = useRef<GainNode | null>(null);
     const isPlayingRef = useRef<boolean>(false);
     const voiceIntervalRef = useRef<number | null>(null);
+    const [isMultipleTabsOpen, setIsMultipleTabsOpen] = useState(false);
+    const tabIdRef = useRef<string>(Math.random().toString(36).substring(2, 15));
+    const channelRef = useRef<BroadcastChannel | null>(null);
+    const heartbeatIntervalRef = useRef<number | null>(null);
 
     const speakMessage = () => {
         if (!isPlayingRef.current) return;
@@ -149,7 +160,140 @@ const TabAlarm: React.FC = () => {
         };
     }, []);
 
-    // This component doesn't render anything visible
+    // Multiple tab detection
+    useEffect(() => {
+        if (!PREVENT_MULTIPLE_TABS) return;
+
+        const tabId = tabIdRef.current;
+        const STORAGE_KEY = 'greentrails_active_tabs';
+        const HEARTBEAT_INTERVAL = 1000; // 1 second
+        const TAB_TIMEOUT = 3000; // 3 seconds
+
+        // Initialize storage
+        const updateTabsList = () => {
+            const now = Date.now();
+            const storedData = localStorage.getItem(STORAGE_KEY);
+            let tabs: { [key: string]: number } = {};
+            
+            if (storedData) {
+                try {
+                    tabs = JSON.parse(storedData);
+                    // Remove expired tabs
+                    Object.keys(tabs).forEach(id => {
+                        if (now - tabs[id] > TAB_TIMEOUT) {
+                            delete tabs[id];
+                        }
+                    });
+                } catch (e) {
+                    tabs = {};
+                }
+            }
+            
+            // Add current tab
+            tabs[tabId] = now;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(tabs));
+            
+            // Check if multiple tabs are open
+            const activeTabCount = Object.keys(tabs).length;
+            setIsMultipleTabsOpen(activeTabCount > 1);
+        };
+
+        // Initial check
+        updateTabsList();
+
+        // Set up heartbeat to keep tab alive
+        heartbeatIntervalRef.current = window.setInterval(updateTabsList, HEARTBEAT_INTERVAL);
+
+        // Handle storage events from other tabs
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === STORAGE_KEY) {
+                const now = Date.now();
+                const storedData = e.newValue;
+                if (storedData) {
+                    try {
+                        const tabs = JSON.parse(storedData);
+                        const activeTabs = Object.keys(tabs).filter(id => now - tabs[id] <= TAB_TIMEOUT);
+                        setIsMultipleTabsOpen(activeTabs.length > 1);
+                    } catch (error) {
+                        console.error('Error parsing tabs data:', error);
+                    }
+                }
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+
+        // Clean up on unmount
+        return () => {
+            if (heartbeatIntervalRef.current) {
+                clearInterval(heartbeatIntervalRef.current);
+            }
+            window.removeEventListener('storage', handleStorageChange);
+            
+            // Remove this tab from the list
+            const storedData = localStorage.getItem(STORAGE_KEY);
+            if (storedData) {
+                try {
+                    const tabs = JSON.parse(storedData);
+                    delete tabs[tabId];
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(tabs));
+                } catch (e) {
+                    // Ignore errors during cleanup
+                }
+            }
+        };
+    }, []);
+
+    // Render warning if multiple tabs are open
+    if (isMultipleTabsOpen && PREVENT_MULTIPLE_TABS) {
+        return (
+            <div style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                backgroundColor: 'rgba(0, 0, 0, 0.95)',
+                zIndex: 9999,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                color: 'white',
+                textAlign: 'center',
+                padding: '20px'
+            }}>
+                <h1 style={{ fontSize: '3em', marginBottom: '20px', color: '#4CAF50' }}>
+                    ⚠️ Multiple Tabs Detected
+                </h1>
+                <p style={{ fontSize: '1.5em', marginBottom: '20px', maxWidth: '600px' }}>
+                    You can only have one Green Trails tab open at a time.
+                </p>
+                <p style={{ fontSize: '1.2em', marginBottom: '30px', maxWidth: '600px' }}>
+                    Please close this tab and return to your other Green Trails tab.
+                </p>
+                <button
+                    onClick={() => window.close()}
+                    style={{
+                        padding: '15px 30px',
+                        fontSize: '1.2em',
+                        backgroundColor: '#4CAF50',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '5px',
+                        cursor: 'pointer',
+                        transition: 'background-color 0.3s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#45a049'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4CAF50'}
+                >
+                    Close This Tab
+                </button>
+            </div>
+        );
+    }
+
+    // This component doesn't render anything visible when tabs are OK
     return null;
 };
 
