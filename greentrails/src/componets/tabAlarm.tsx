@@ -139,7 +139,7 @@ const MultipleTabDetector: React.FC = () => {
                 width: '100%',
                 height: '100%',
                 backgroundColor: 'rgba(0, 0, 0, 0.95)',
-                zIndex: 9999,
+                zIndex: 99999,
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center',
