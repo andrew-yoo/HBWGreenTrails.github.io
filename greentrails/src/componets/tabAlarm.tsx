@@ -20,7 +20,7 @@ const MultipleTabDetector: React.FC = () => {
         const tabId = tabIdRef.current;
         const STORAGE_KEY = 'greentrails_active_tabs';
         const HEARTBEAT_INTERVAL = 1000; // 1 second
-        const TAB_TIMEOUT = 3000; // 3 seconds
+        const TAB_TIMEOUT = 2000; // 2 seconds - reduced to minimize reload issues
 
         // Helper function to clean up and check tabs
         const updateTabsList = () => {
@@ -51,18 +51,36 @@ const MultipleTabDetector: React.FC = () => {
             return activeTabCount > 1;
         };
 
-        // Initial check - delay slightly to ensure cleanup happens before showing warning
-        // This prevents flashing the warning on page reload when only one tab exists
+        // On initial load, do an aggressive cleanup first to remove any stale entries
+        // This prevents false positives on page reload
+        const now = Date.now();
+        const storedData = localStorage.getItem(STORAGE_KEY);
+        if (storedData) {
+            try {
+                const tabs = JSON.parse(storedData);
+                // Be more aggressive on initial cleanup - remove anything older than 1.5 seconds
+                const cleanedTabs: { [key: string]: number } = {};
+                Object.keys(tabs).forEach(id => {
+                    if (now - tabs[id] <= 1500) {
+                        cleanedTabs[id] = tabs[id];
+                    }
+                });
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanedTabs));
+            } catch (e) {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({}));
+            }
+        }
+
+        // Now do the first check
         const isMultiple = updateTabsList();
         
-        // Only set to true immediately if we genuinely have multiple tabs
-        // Use a small delay to prevent false positives from stale localStorage data
+        // Don't show warning immediately - wait to confirm it's genuinely multiple tabs
         if (isMultiple) {
-            // Double-check after a brief moment to avoid false positives from race conditions
+            // Wait longer to be absolutely sure this isn't a reload scenario
             setTimeout(() => {
                 const recheckMultiple = updateTabsList();
                 setIsMultipleTabsOpen(recheckMultiple);
-            }, 100);
+            }, 500);
         }
 
         // Set up heartbeat to keep tab alive
