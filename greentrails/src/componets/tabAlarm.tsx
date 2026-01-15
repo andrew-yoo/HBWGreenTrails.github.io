@@ -1,164 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 
 // ============================================
-// TAB ALARM CONFIGURATION
-// Set this to false to disable the tab alarm
-// ============================================
-const TAB_ALARM_ENABLED = true;
-// ============================================
-
-// ============================================
 // MULTIPLE TAB DETECTION CONFIGURATION
 // Set this to false to allow multiple tabs
 // ============================================
 const PREVENT_MULTIPLE_TABS = true;
 // ============================================
 
-// Alarm sound settings
-const ALARM_FREQUENCY = 800;
-const ALARM_VOLUME = 0.3;
-const PULSE_FADE_DURATION = 0.25;
-const PULSE_CYCLE_DURATION = 0.5;
-const PULSE_INTERVAL_MS = 500;
-
-// Voice message settings
-const VOICE_MESSAGE = "Go back to Green Trails";
-const VOICE_REPEAT_INTERVAL_MS = 3000;
-
-// Type for webkit AudioContext (Safari compatibility)
-type WebkitWindow = Window & { webkitAudioContext?: typeof AudioContext };
-
-const TabAlarm: React.FC = () => {
-    const audioContextRef = useRef<AudioContext | null>(null);
-    const oscillatorRef = useRef<OscillatorNode | null>(null);
-    const gainNodeRef = useRef<GainNode | null>(null);
-    const isPlayingRef = useRef<boolean>(false);
-    const voiceIntervalRef = useRef<number | null>(null);
+const MultipleTabDetector: React.FC = () => {
     const [isMultipleTabsOpen, setIsMultipleTabsOpen] = useState(false);
     const [showCloseInstructions, setShowCloseInstructions] = useState(false);
     const tabIdRef = useRef<string>(`${Date.now()}-${Math.random().toString(36).substring(2, 15)}`);
     const heartbeatIntervalRef = useRef<number | null>(null);
-
-    const speakMessage = () => {
-        if (!isPlayingRef.current) return;
-        
-        try {
-            if ('speechSynthesis' in window) {
-                // Cancel any pending speech before starting new one to avoid overlap
-                window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(VOICE_MESSAGE);
-                utterance.rate = 1.0;
-                utterance.volume = 1.0;
-                window.speechSynthesis.speak(utterance);
-            }
-        } catch (error) {
-            console.error('Failed to speak message:', error);
-        }
-    };
-
-    const startAlarm = () => {
-        if (!TAB_ALARM_ENABLED || isPlayingRef.current) return;
-        
-        try {
-            // Create audio context if not exists
-            if (!audioContextRef.current) {
-                const AudioContextClass = window.AudioContext || (window as WebkitWindow).webkitAudioContext;
-                if (AudioContextClass) {
-                    audioContextRef.current = new AudioContextClass();
-                }
-            }
-            
-            if (!audioContextRef.current) return;
-            
-            const audioContext = audioContextRef.current;
-            
-            // Create oscillator for alarm sound
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.type = 'square';
-            oscillator.frequency.setValueAtTime(ALARM_FREQUENCY, audioContext.currentTime);
-            
-            // Create a pulsing alarm effect
-            gainNode.gain.setValueAtTime(ALARM_VOLUME, audioContext.currentTime);
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            oscillator.start();
-            oscillatorRef.current = oscillator;
-            gainNodeRef.current = gainNode;
-            isPlayingRef.current = true;
-            
-            // Create pulsing effect
-            const pulse = () => {
-                if (!isPlayingRef.current || !gainNodeRef.current || !audioContextRef.current) return;
-                
-                const currentTime = audioContextRef.current.currentTime;
-                gainNodeRef.current.gain.setValueAtTime(ALARM_VOLUME, currentTime);
-                gainNodeRef.current.gain.linearRampToValueAtTime(0, currentTime + PULSE_FADE_DURATION);
-                gainNodeRef.current.gain.setValueAtTime(ALARM_VOLUME, currentTime + PULSE_CYCLE_DURATION);
-                
-                if (isPlayingRef.current) {
-                    setTimeout(pulse, PULSE_INTERVAL_MS);
-                }
-            };
-            pulse();
-            
-            // Start voice message - speak immediately and repeat at intervals
-            speakMessage();
-            voiceIntervalRef.current = window.setInterval(speakMessage, VOICE_REPEAT_INTERVAL_MS);
-        } catch (error) {
-            console.error('Failed to start alarm:', error);
-        }
-    };
-
-    const stopAlarm = () => {
-        if (oscillatorRef.current) {
-            try {
-                oscillatorRef.current.stop();
-                oscillatorRef.current.disconnect();
-            } catch (error) {
-                // Ignore errors when stopping
-            }
-            oscillatorRef.current = null;
-        }
-        if (gainNodeRef.current) {
-            gainNodeRef.current.disconnect();
-            gainNodeRef.current = null;
-        }
-        // Stop voice message
-        if (voiceIntervalRef.current) {
-            clearInterval(voiceIntervalRef.current);
-            voiceIntervalRef.current = null;
-        }
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-        }
-        isPlayingRef.current = false;
-    };
-
-    useEffect(() => {
-        if (!TAB_ALARM_ENABLED) return;
-        
-        const handleVisibilityChange = () => {
-            if (document.hidden) {
-                startAlarm();
-            } else {
-                stopAlarm();
-            }
-        };
-
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-
-        return () => {
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
-            stopAlarm();
-            if (audioContextRef.current) {
-                audioContextRef.current.close();
-            }
-        };
-    }, []);
 
     // Multiple tab detection
     useEffect(() => {
@@ -169,7 +22,7 @@ const TabAlarm: React.FC = () => {
         const HEARTBEAT_INTERVAL = 1000; // 1 second
         const TAB_TIMEOUT = 3000; // 3 seconds
 
-        // Initialize storage
+        // Helper function to clean up and check tabs
         const updateTabsList = () => {
             const now = Date.now();
             const storedData = localStorage.getItem(STORAGE_KEY);
@@ -178,7 +31,7 @@ const TabAlarm: React.FC = () => {
             if (storedData) {
                 try {
                     tabs = JSON.parse(storedData);
-                    // Remove expired tabs
+                    // Remove expired tabs first
                     Object.keys(tabs).forEach(id => {
                         if (now - tabs[id] > TAB_TIMEOUT) {
                             delete tabs[id];
@@ -193,16 +46,30 @@ const TabAlarm: React.FC = () => {
             tabs[tabId] = now;
             localStorage.setItem(STORAGE_KEY, JSON.stringify(tabs));
             
-            // Check if multiple tabs are open
+            // Check if multiple tabs are open (after cleanup and adding current tab)
             const activeTabCount = Object.keys(tabs).length;
-            setIsMultipleTabsOpen(activeTabCount > 1);
+            return activeTabCount > 1;
         };
 
-        // Initial check
-        updateTabsList();
+        // Initial check - delay slightly to ensure cleanup happens before showing warning
+        // This prevents flashing the warning on page reload when only one tab exists
+        const isMultiple = updateTabsList();
+        
+        // Only set to true immediately if we genuinely have multiple tabs
+        // Use a small delay to prevent false positives from stale localStorage data
+        if (isMultiple) {
+            // Double-check after a brief moment to avoid false positives from race conditions
+            setTimeout(() => {
+                const recheckMultiple = updateTabsList();
+                setIsMultipleTabsOpen(recheckMultiple);
+            }, 100);
+        }
 
         // Set up heartbeat to keep tab alive
-        heartbeatIntervalRef.current = window.setInterval(updateTabsList, HEARTBEAT_INTERVAL);
+        heartbeatIntervalRef.current = window.setInterval(() => {
+            const isMultiple = updateTabsList();
+            setIsMultipleTabsOpen(isMultiple);
+        }, HEARTBEAT_INTERVAL);
 
         // Handle storage events from other tabs
         const handleStorageChange = (e: StorageEvent) => {
@@ -316,4 +183,4 @@ const TabAlarm: React.FC = () => {
     return null;
 };
 
-export default TabAlarm;
+export default MultipleTabDetector;

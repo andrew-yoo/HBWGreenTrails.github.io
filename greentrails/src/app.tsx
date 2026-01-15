@@ -13,7 +13,7 @@ import PrestigePage from './prestige/prestigepage';
 import PrestigeShop from './prestige/prestigeshop';
 import Icon from './componets/icon'
 import Snow from './componets/snow';
-import TabAlarm from './componets/tabAlarm';
+import MultipleTabDetector from './componets/tabAlarm';
 import { AuthProvider } from './context/AuthContext';
 import { NotificationContainer } from './componets/Notification';
 
@@ -23,7 +23,7 @@ const App: React.FC = () => {
             <div className="App">
                 <Icon />
                 <Snow />
-                <TabAlarm />
+                <MultipleTabDetector />
                 <NotificationContainer />
                 <Router>
                     <Routes>
