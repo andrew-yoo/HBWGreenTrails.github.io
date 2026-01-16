@@ -19,6 +19,7 @@ const MultipleTabDetector: React.FC = () => {
 
         const tabId = tabIdRef.current;
         const STORAGE_KEY = 'greentrails_active_tabs';
+        const BLOCKED_KEY = 'greentrails_tabs_blocked';
         const HEARTBEAT_INTERVAL = 1000; // 1 second
         const TAB_TIMEOUT = 2000; // 2 seconds - reduced to minimize reload issues
 
@@ -80,13 +81,28 @@ const MultipleTabDetector: React.FC = () => {
             setTimeout(() => {
                 const recheckMultiple = updateTabsList();
                 setIsMultipleTabsOpen(recheckMultiple);
+                // Set blocked status in localStorage
+                if (recheckMultiple) {
+                    localStorage.setItem(BLOCKED_KEY, 'true');
+                } else {
+                    localStorage.removeItem(BLOCKED_KEY);
+                }
             }, 500);
+        } else {
+            // Ensure blocked status is cleared if only one tab
+            localStorage.removeItem(BLOCKED_KEY);
         }
 
         // Set up heartbeat to keep tab alive
         heartbeatIntervalRef.current = window.setInterval(() => {
             const isMultiple = updateTabsList();
             setIsMultipleTabsOpen(isMultiple);
+            // Update blocked status in localStorage for other components
+            if (isMultiple) {
+                localStorage.setItem(BLOCKED_KEY, 'true');
+            } else {
+                localStorage.removeItem(BLOCKED_KEY);
+            }
         }, HEARTBEAT_INTERVAL);
 
         // Handle storage events from other tabs
@@ -122,6 +138,11 @@ const MultipleTabDetector: React.FC = () => {
                     const tabs = JSON.parse(storedData);
                     delete tabs[tabId];
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(tabs));
+                    
+                    // Clear blocked status if no tabs remain or only one tab
+                    if (Object.keys(tabs).length <= 1) {
+                        localStorage.removeItem(BLOCKED_KEY);
+                    }
                 } catch (e) {
                     // Ignore errors during cleanup
                 }
