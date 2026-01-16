@@ -1122,7 +1122,7 @@ const SantaUpgrades: React.FC = () => {
                     <ol style={{ lineHeight: '2', color: '#555', fontSize: '16px', paddingLeft: '30px' }}>
                         <li><strong>Click flying Fireworks</strong> anywhere on the site to pop them and earn points!</li>
                         <li><strong>Spend your points</strong> on upgrades to become more efficient</li>
-                        <li><strong>Auto-clicker</strong> works on ALL pages across the site automatically</li>
+                        <li><strong>Auto-clicker</strong> clicks fireworks automatically</li>
                         <li><strong>Spawn speed</strong> increases how often Fireworks appear</li>
                         <li><strong>Firework worth</strong> makes each click more valuable</li>
                         <li><strong>Lucky click</strong> gives you a chance for double points</li>
