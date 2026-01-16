@@ -570,6 +570,13 @@ export default function Snow({
             console.log('Auto-clicker active! Interval:', autoClickInterval, 'ms (level', autoClickerLevelRef.current, ', prestige boost:', prestigeAutoClickerBoostRef.current, ')');
             
             autoClickerIntervalRef.current = window.setInterval(() => {
+                // Check if multiple tabs are blocked - don't auto-click if so
+                const isBlocked = localStorage.getItem('greentrails_tabs_blocked') === 'true';
+                if (isBlocked) {
+                    console.log('Auto-clicker paused: multiple tabs detected');
+                    return;
+                }
+                
                 const fireworks = fireworkSpritesRef.current;
                 if (fireworks.length > 0 && currentUserRef.current) {
                     // Auto-click a random firework
